@@ -130,6 +130,7 @@ public class Inventory implements GReport{
             System.setProperty("store.report.criteria.group", instance.GroupBy());
             System.setProperty("store.report.criteria.branch", "");
             System.setProperty("store.report.criteria.date", "");
+            System.out.println(instance.getDateTransNox());
             System.setProperty("store.report.date.criteria", CommonUtils.xsDateShort(CommonUtils.toDate(instance.getDateTransNox())));
             return true;
         }
@@ -192,7 +193,8 @@ public class Inventory implements GReport{
                     logReport();
                 }
                 JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true);                
+                jv.setVisible(true);    
+                jv.setAlwaysOnTop(true);            
             }
             
         } catch (SQLException ex) {

@@ -1,19 +1,31 @@
 /**
- * Inventory Transfer Reports Main Class
+ * Food Reports Main Class
  * @author Michael T. Cuison
- * @started 2019.06.08
+ * @started 2018.11.24
  */
 
 package org.rmj.cas.food.reports.classes;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -22,32 +34,38 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javax.sql.rowset.CachedRowSet;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.data.JsonDataSource;
+import net.sf.jasperreports.swing.JRViewer;
 import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.rmj.appdriver.GLogger;
 import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
+import org.rmj.appdriver.agentfx.CommonUtils;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
-public class InvTransfer implements GReport{
+public class DailyProductionVs implements GReport{
     private GRider _instance;
     private boolean _preview = true;
     private String _message = "";
     private LinkedList _rptparam = null;
     private JasperPrint _jrprint = null;
-    private LogWrapper logwrapr = new LogWrapper("org.rmj.foodreports.classes.InvTransfer", "InvTransferReport.log");
-    
+    private JasperViewer jrViewer = null;
+    private LogWrapper logwrapr = new LogWrapper("org.rmj.foodreports.classes.Inventory", "InventoryReport.log");
+    private ObservableList<DailyVsRequest> data = FXCollections.observableArrayList();
     private double xOffset = 0; 
     private double yOffset = 0;
     
-    public InvTransfer(){
+    public DailyProductionVs(){
         _rptparam = new LinkedList();
         _rptparam.add("store.report.id");
         _rptparam.add("store.report.no");
@@ -60,8 +78,7 @@ public class InvTransfer implements GReport{
         _rptparam.add("store.report.criteria.presentation");
         _rptparam.add("store.report.criteria.branch");      
         _rptparam.add("store.report.criteria.group");        
-        _rptparam.add("store.report.criteria.datefrom");     
-        _rptparam.add("store.report.criteria.datethru");     
+        _rptparam.add("store.report.criteria.date");        
     }
     
     @Override
@@ -112,16 +129,16 @@ public class InvTransfer implements GReport{
             stage.setScene(scene);
             stage.showAndWait();
         } catch (IOException e) {
-            ShowMessageFX.Error(e.getMessage(), DailyProduction.class.getSimpleName(), "Please inform MIS Department.");
+            ShowMessageFX.Error(e.getMessage(), DailyProductionVs.class.getSimpleName(), "Please inform MIS Department.");
             System.exit(1);
         }
         
-        if (!instance.isCancelled()){            
+        if (!instance.isCancelled()){
             System.setProperty("store.default.debug", "true");
 //            System.setProperty("store.report.criteria.presentation", "1");
             System.setProperty("store.report.criteria.presentation", String.valueOf(instance.getIndex()));
-            System.setProperty("store.report.criteria.datefrom", instance.getDateFrom());
-            System.setProperty("store.report.criteria.datethru", instance.getDateTo());
+            System.setProperty("store.report.criteria.dteF", instance.getDateFrom());
+            System.setProperty("store.report.criteria.dteT", instance.getDateTo());
             System.setProperty("store.report.criteria.branch", "");
             System.setProperty("store.report.criteria.group", "");
             return true;
@@ -207,96 +224,136 @@ public class InvTransfer implements GReport{
     }
     
     private boolean printSummary() throws SQLException{
-        System.out.println("Printing Summary");
         String lsCondition = "";
-        String lsSQL = getReportSQLSummary();
-        String lsDate = "";
+        String lsDate = "", lsDate1 = "";
         
-        if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
-                !System.getProperty("store.report.criteria.datethru").equals("")){
-            
-            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
-                        SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
-            
-            lsCondition = "a.dTransact BETWEEN " + lsDate;
+        if (!System.getProperty("store.report.criteria.dteF").equals("")){
+            lsDate = System.getProperty("store.report.criteria.dteF");
+            lsDate1 = System.getProperty("store.report.criteria.dteT");
+            lsCondition = "a.dTransact BETWEEN " + SQLUtil.toSQL(lsDate) + " AND " + SQLUtil.toSQL(lsDate1);
         } else lsCondition = "0=1";
-        
-        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
-        lsSQL = MiscUtil.addCondition(getReportSQLSummary(), lsCondition);
-        ResultSet rs = _instance.executeQuery(lsSQL);
-         while (!rs.next()) {
-            
-            _message = "No record found...";
-            return false;
-        }
+        System.out.println("Summary");
+        System.out.println(MiscUtil.addCondition(getReportSQL_ProductRequest(), lsCondition));
+        System.out.println(MiscUtil.addCondition(getReportSQL_DailyProduction(), lsCondition));
+        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL_ProductRequest(), lsCondition));
+        ResultSet rs1 = _instance.executeQuery(MiscUtil.addCondition(getReportSQL_DailyProduction(), lsCondition));
         //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        DailyVsRequest lsModel = new DailyVsRequest();
         
+            
+        lsModel.setIndex01("0");
+        lsModel.setIndex02("0");
+        while(rs.next()){
+            if(rs.getString("nField01") != null){
+                lsModel.setIndex01(rs.getString("nField01"));
+            }
+        }
+        while(rs1.next()){
+            if(rs1.getString("nField01") != null){
+                lsModel.setIndex02(rs1.getString("nField01"));
+            }
+        }
+
+        data.add(lsModel);
+        JRBeanCollectionDataSource beanColDataSource1 = new JRBeanCollectionDataSource(data);
+        
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource((ResultSet) data);
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
+        params.put("nReqTotal", lsModel.getIndex01());  
+        params.put("nDlyTotal", lsModel.getIndex02());  
+        params.put("sDateFrom", lsDate);  
+        params.put("sDateThru", lsDate1);  
+        params.put("sBranchNm", _instance.getBranchName());
         params.put("sCompnyNm", _instance.getClientName());  
         params.put("sBranchNm", _instance.getBranchName());
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
         params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+        params.put("sReportDt", !lsDate.equals("") ? lsDate + " - " + lsDate1: "");
         params.put("sPrintdBy", _instance.getUserID());
         
         try {
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
                                                     System.getProperty("store.report.file"),
                                                     params, 
-                                                    jrRS);
+                                                    beanColDataSource1);
         } catch (JRException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DailyProductionVs.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
         
         return true;
+        
     }
     
     private boolean printDetail() throws SQLException{
         String lsCondition = "";
-        String lsDate = "";
+        String lsDate = "",lsDate1 = "";
         
-        if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
-                !System.getProperty("store.report.criteria.datethru").equals("")){
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+        if (!System.getProperty("store.report.criteria.dteF").equals("")){
+            lsDate = System.getProperty("store.report.criteria.dteF");
+            lsDate1 = System.getProperty("store.report.criteria.dteT");
             
-            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
-                        SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
-            
-            lsCondition = "a.dTransact BETWEEN " + lsDate;
+         startDate = LocalDate.parse(lsDate);
+         endDate = LocalDate.parse(lsDate1);
+            lsCondition = "a.dTransact BETWEEN " + SQLUtil.toSQL(lsDate) + " AND " + SQLUtil.toSQL(lsDate1) + " GROUP BY a.dTransact " +
+            "   ORDER BY a.dTransact ASC;";
         } else lsCondition = "0=1";
-        
-        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
-        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
-         while (!rs.next()) {
+        System.out.println("Detail");
+
+        for (LocalDate date = startDate; date.isBefore(endDate.plusDays(1)); date = date.plusDays(1)) {
+            System.out.println("date = " + date);
+            // do something with date
+            DailyVsRequest lsModel = new DailyVsRequest();
+            lsCondition = "a.dTransact = " + SQLUtil.toSQL(date.toString());
+            ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL_ProductRequest(), lsCondition));
+            ResultSet rs1 = _instance.executeQuery(MiscUtil.addCondition(getReportSQL_DailyProduction(), lsCondition));
+            System.out.println(MiscUtil.addCondition(getReportSQL_ProductRequest(), lsCondition));
+            System.out.println(MiscUtil.addCondition(getReportSQL_DailyProduction(), lsCondition));
             
-            _message = "No record found...";
-            return false;
+            lsModel.setIndex01(date.toString());
+            lsModel.setIndex02("0");
+            lsModel.setIndex03("0");
+            while(rs.next()){
+                if(rs.getString("nField01") != null){
+                    lsModel.setIndex02(rs.getString("nField01"));
+                }
+            }
+            while(rs1.next()){
+                if(rs1.getString("nField01") != null){
+                    lsModel.setIndex03(rs1.getString("nField01"));
+                }
+            }
+            
+            data.add(lsModel);
         }
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        JRBeanCollectionDataSource beanColDataSource1 = new JRBeanCollectionDataSource(data);
         
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
+        params.put("sDateFrom", !lsDate.equals("") ? lsDate : "");  
+        params.put("sDateThru", !lsDate1.equals("") ? lsDate1 : "");  
+        params.put("sBranchNm", _instance.getBranchName());
         params.put("sCompnyNm", _instance.getClientName());  
         params.put("sBranchNm", _instance.getBranchName());
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
         params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+        params.put("sReportDt", !lsDate.equals("") ? lsDate : "");
         params.put("sPrintdBy", _instance.getUserID());
-        
         try {
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
                                                     System.getProperty("store.report.file"),
                                                     params, 
-                                                    jrRS);
+                                                    beanColDataSource1);
         } catch (JRException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DailyProductionVs.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
         
         return true;
     }
-    
     private void closeReport(){
         _rptparam.forEach(item->System.clearProperty((String) item));
         System.clearProperty("store.report.file");
@@ -309,40 +366,23 @@ public class InvTransfer implements GReport{
         System.clearProperty("store.report.header");
     }
     
-    private String getReportSQL(){
-        return "SELECT" +
-                    "  c.sBarCodex `sField01`" +
-                    ", CONCAT(c.sDescript, '/', IFNULL(d.sDescript, 'NONE'), '/', IFNULL(e.sDescript, 'NONE'), '/', IFNULL(f.sMeasurNm, 'NONE')) `sField02`" +
-                    ", b.nQuantity `nField01`" +
-                    ", b.nInvCostx `lField01`" +
-                    ", a.sTransNox `sField03`" +
-                    ", DATE_FORMAT(a.dTransact, '%M %d, %Y') `sField04`" +
-                " FROM Inv_Transfer_Master a" +
-                    ", Inv_Transfer_Detail b" +
-                        " LEFT JOIN Inventory c" +
-                            " ON b.sStockIDx = c.sStockIDx" +
-                        " LEFT JOIN Model d" +
-                            " ON c.sModelCde = d.sModelCde" + 
-                        " LEFT JOIN Brand e" + 
-                            " ON c.sBrandCde = e.sBrandCde" + 
-                        " LEFT JOIN Measure f" +
-                            " ON c.sMeasurID = f.sMeasurID" + 
-                " WHERE a.sTransNox = b.sTransNox" +                    
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                " ORDER BY sField04, sField03, sField02";
-    }
-    private String getReportSQLSummary(){
+    private String getReportSQL_DailyProduction(){
         return "SELECT " +
-                "  a.sTransNox    `sField01`, " +
-                "  a.sRemarksx    `sField02`, " +
-                "  SUM(b.nQuantity)   `nField01`, " +
-                "  b.sTransNox    `sField03`, " +
-                "  DATE_FORMAT(a.dTransact, '%M %d, %Y')    `sField04` " +
-                "FROM Inv_Transfer_Master a, " +
-                "  Inv_Transfer_Detail b " +
-                "WHERE a.sTransNox = b.sTransNox " +
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                "GROUP BY  a.dTransact, sField03     " +
-                "ORDER BY a.dTransact,b.sTransNox";
+                    " SUM(IFNull(b.nQuantity,0)) `nField01`" +
+                " FROM Daily_Production_Master a" +
+                    ", Daily_Production_Detail b" +
+                " WHERE a.sTransNox = b.sTransNox" +                    
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode());
+    
     }
+    private String getReportSQL_ProductRequest(){
+        return "SELECT " +
+                    " SUM(IFNull(b.nQuantity,0)) `nField01`" +
+                " FROM Product_Request_Master a" +
+                    ", Product_Request_Detail b" +
+                " WHERE a.sTransNox = b.sTransNox" +                    
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode());
+    
+    }
+       
 }

@@ -12,7 +12,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import static javafx.scene.input.KeyCode.ENTER;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -39,17 +41,24 @@ public class DateCriteriaController implements Initializable {
     @FXML
     private Button btnExit;
     @FXML
+    private RadioButton rbDetail;
+    @FXML
+    private RadioButton rbSummary;
+    @FXML
     private FontAwesomeIconView glyphExit;
     
     private boolean pbCancelled = true;
     private boolean pbSingleDate = false;
     private String psDateFrom = "";
     private String psDateThru = "";
-    
+    private int lnIndex;
+    private ToggleGroup rbGroup;
     public boolean isCancelled(){return pbCancelled;}
     public String getDateFrom(){return psDateFrom;}
     public String getDateTo(){return psDateThru;}
+    public int getIndex(){return lnIndex;}
     public void singleDayOnly(boolean foValue){pbSingleDate = foValue;}
+    
    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -65,6 +74,11 @@ public class DateCriteriaController implements Initializable {
         
         txtField02.setDisable(pbSingleDate);
         
+        rbGroup = new ToggleGroup();
+        rbDetail.setToggleGroup(rbGroup);
+        rbSummary.setToggleGroup(rbGroup);
+        rbDetail.setSelected(true);
+        lnIndex = 0;
         loadRecord();
         
         pbLoaded = true;
@@ -94,6 +108,12 @@ public class DateCriteriaController implements Initializable {
                         psDateThru = txtField02.getText();
                     else 
                         psDateThru = CommonUtils.xsDateShort(txtField02.getText());
+                    
+                    if (rbDetail.isSelected()){
+                        lnIndex = 1;
+                    }else if(rbSummary.isSelected()){
+                        lnIndex = 0;
+                    }
                 } catch (ParseException e) {
                     ShowMessageFX.Error(getStage(), e.getMessage(), DateCriteriaController.class.getSimpleName(), "Please inform MIS Department.");
                     //System.exit(1);
@@ -106,7 +126,7 @@ public class DateCriteriaController implements Initializable {
                 
                 pbCancelled = false; break;
             case "btnExit":
-                pbCancelled = true;
+                pbCancelled = true; 
                 break;
             default:
                 ShowMessageFX.Warning(null, pxeModuleName, "Button with name "+ lsButton + " not registered!");

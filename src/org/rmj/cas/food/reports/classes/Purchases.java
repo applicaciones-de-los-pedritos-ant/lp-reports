@@ -177,13 +177,16 @@ public class Purchases implements GReport{
                     bResult = printDetail();
             }
             
-            if(bResult){
-                if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
-                    logReport();
-                }
-                JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true);                
+            if(!bResult){
+                closeReport();
+                return false;
             }
+            if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
+                logReport();
+            }
+            JasperViewer jv = new JasperViewer(_jrprint, false);     
+            jv.setVisible(true);  
+            jv.setAlwaysOnTop(bResult);
             
         } catch (SQLException ex) {
             _message = ex.getMessage();
@@ -206,7 +209,7 @@ public class Purchases implements GReport{
         _rptparam.forEach(item->System.out.println(item));
     }
     
-    private boolean printSummary(){
+    private boolean printSummary() throws SQLException{
         String lsSQL = getReportSQL();
         String lsCondition = "";
         String lsDate = "";
@@ -230,6 +233,11 @@ public class Purchases implements GReport{
 
         System.out.println(lsSQL);
         ResultSet rs = _instance.executeQuery(lsSQL);
+        while (!rs.next()) {
+
+           _message = "No record found...";
+           return false;
+        }
         
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
@@ -255,7 +263,7 @@ public class Purchases implements GReport{
         return true;
     }
     
-    private boolean printDetail(){
+    private boolean printDetail() throws SQLException{
         String lsSQL = getReportSQL();
         String lsCondition = "";
         String lsDate = "";
@@ -279,7 +287,11 @@ public class Purchases implements GReport{
 
         System.out.println(lsSQL);
         ResultSet rs = _instance.executeQuery(lsSQL);
-        
+        while (!rs.next()) {
+
+           _message = "No record found...";
+           return false;
+        }
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         

@@ -90,6 +90,7 @@ public class InventoryCriteriaController implements Initializable {
         radioBtn01.setDisable(pbDetailedOnly);
         
         txtField00.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
+        psDateFrom = LocalDate.now().toString();
         radioBtn02.setSelected(true);
         radioBtn03.setSelected(true);
         psPresentation = "1";

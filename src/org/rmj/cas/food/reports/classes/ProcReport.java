@@ -52,7 +52,7 @@ public class ProcReport {
                 if (instance.getParam()){
                     instance.hasPreview(true);
                     if (!instance.processReport())
-                        ShowMessageFX.Warning(null, "Warning", "Unable to load report.");
+                        ShowMessageFX.Warning(null, "Warning", "No record found for this transaction.");
                 }
             }
         } catch (SQLException ex) {
