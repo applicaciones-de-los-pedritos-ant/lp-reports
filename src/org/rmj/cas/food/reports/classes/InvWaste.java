@@ -118,7 +118,8 @@ public class InvWaste implements GReport{
         
         if (!instance.isCancelled()){            
             System.setProperty("store.default.debug", "true");
-            System.setProperty("store.report.criteria.presentation", "1");
+//            System.setProperty("store.report.criteria.presentation", "1");
+            System.setProperty("store.report.criteria.presentation", String.valueOf(instance.getIndex()));
             System.setProperty("store.report.criteria.datefrom", instance.getDateFrom());
             System.setProperty("store.report.criteria.datethru", instance.getDateTo());
             System.setProperty("store.report.criteria.branch", "");
@@ -173,13 +174,17 @@ public class InvWaste implements GReport{
                     bResult = printDetail();
             }
             
-            if(bResult){
-                if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
-                    logReport();
-                }
-                JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true);                
+            if(!bResult){
+                closeReport();
+                return false;
+                           
             }
+            if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
+                logReport();
+            }
+            JasperViewer jv = new JasperViewer(_jrprint, false);     
+            jv.setVisible(true);
+            jv.setAlwaysOnTop(true);    
             
         } catch (SQLException ex) {
             _message = ex.getMessage();
@@ -202,12 +207,52 @@ public class InvWaste implements GReport{
         _rptparam.forEach(item->System.out.println(item));
     }
     
-    private boolean printSummary(){
+    private boolean printSummary() throws SQLException{
         System.out.println("Printing Summary");
+        String lsCondition = "";
+        String lsDate = "";
+        
+        if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
+                !System.getProperty("store.report.criteria.datethru").equals("")){
+            
+            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
+                        SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+            
+            lsCondition = "a.dTransact BETWEEN " + lsDate;
+        } else lsCondition = "0=1";
+        
+        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQLSummary(), lsCondition));
+        if (!rs.next()) {
+             _message = "No record was found...";
+            return false;
+        } 
+        //Convert the data-source to JasperReport data-source
+        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        
+        //Create the parameter
+        Map<String, Object> params = new HashMap<>();
+        params.put("sCompnyNm", _instance.getClientName());  
+        params.put("sBranchNm", _instance.getBranchName());
+        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
+        params.put("sReportNm", System.getProperty("store.report.header"));      
+        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+        params.put("sPrintdBy", _instance.getUserID());
+        
+        try {
+            _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
+                                                    System.getProperty("store.report.file"),
+                                                    params, 
+                                                    jrRS);
+            
+        } catch (JRException ex) {
+            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         return true;
     }
     
-    private boolean printDetail(){
+    private boolean printDetail() throws SQLException{
         String lsCondition = "";
         String lsDate = "";
         
@@ -222,7 +267,10 @@ public class InvWaste implements GReport{
         
         System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
         ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
-        
+        if (!rs.next()) {
+             _message = "No record was found...";
+            return false;
+        } 
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         
@@ -253,6 +301,7 @@ public class InvWaste implements GReport{
         System.clearProperty("store.report.header");
     }
     
+    
     private void logReport(){
         _rptparam.forEach(item->System.clearProperty((String) item));
         System.clearProperty("store.report.file");
@@ -281,4 +330,19 @@ public class InvWaste implements GReport{
                     " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
                 " ORDER BY sField04, sField03, sField02";
     }
+    private String getReportSQLSummary(){
+        return "SELECT " +
+                "  a.sTransNox    sField01, " +
+                "  a.sRemarksx    sField02, " +
+                "  SUM(b.nQuantity)   nField01, " +
+                "  b.sTransNox    sField03, " +
+                "  DATE_FORMAT(a.dTransact, '%M %d, %Y')    sField04 " +
+                "FROM Inv_Waste_Master a, " +
+                "  Inv_Waste_Detail b " +
+                " WHERE a.sTransNox = b.sTransNox " +
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
+                "GROUP BY  a.dTransact, sField03     " +
+                "ORDER BY a.dTransact,b.sTransNox";
+    }
+    
 }

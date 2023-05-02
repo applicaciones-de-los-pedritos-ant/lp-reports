@@ -6,7 +6,10 @@
 
 package org.rmj.cas.food.reports.classes;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -14,6 +17,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,6 +30,8 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JsonDataSource;
+import net.sf.jasperreports.swing.JRViewer;
 import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.rmj.appdriver.GLogger;
@@ -42,6 +48,7 @@ public class DailyProduction implements GReport{
     private String _message = "";
     private LinkedList _rptparam = null;
     private JasperPrint _jrprint = null;
+    private JasperViewer jrViewer = null;
     private LogWrapper logwrapr = new LogWrapper("org.rmj.foodreports.classes.Inventory", "InventoryReport.log");
     
     private double xOffset = 0; 
@@ -72,7 +79,7 @@ public class DailyProduction implements GReport{
     public void hasPreview(boolean show) {
         _preview = show;
     }
-
+    
     @Override
     public boolean getParam() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DateCriteria.fxml"));
@@ -117,7 +124,8 @@ public class DailyProduction implements GReport{
         
         if (!instance.isCancelled()){
             System.setProperty("store.default.debug", "true");
-            System.setProperty("store.report.criteria.presentation", "1");
+//            System.setProperty("store.report.criteria.presentation", "1");
+            System.setProperty("store.report.criteria.presentation", String.valueOf(instance.getIndex()));
             System.setProperty("store.report.criteria.date", instance.getDateFrom());
             System.setProperty("store.report.criteria.branch", "");
             System.setProperty("store.report.criteria.group", "");
@@ -171,13 +179,16 @@ public class DailyProduction implements GReport{
                     bResult = printDetail();
             }
             
-            if(bResult){
-                if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
-                    logReport();
-                }
-                JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true);                
+            if(!bResult){
+                closeReport();
+                return false;
             }
+            if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
+                logReport();
+            }
+            JasperViewer jv = new JasperViewer(_jrprint, false);     
+            jv.setVisible(true);  
+            jv.setAlwaysOnTop(bResult);
             
         } catch (SQLException ex) {
             _message = ex.getMessage();
@@ -200,12 +211,8 @@ public class DailyProduction implements GReport{
         _rptparam.forEach(item->System.out.println(item));
     }
     
-    private boolean printSummary(){
-        System.out.println("Printing Summary");
-        return true;
-    }
-    
-    private boolean printDetail(){
+    private boolean printSummary() throws SQLException {
+        String lsSQL = "";
         String lsCondition = "";
         String lsDate = "";
         
@@ -213,9 +220,20 @@ public class DailyProduction implements GReport{
             lsDate = System.getProperty("store.report.criteria.date");
             lsCondition = "a.dTransact = " + SQLUtil.toSQL(lsDate);
         } else lsCondition = "0=1";
+        System.out.println("Summary");
+        System.out.println(MiscUtil.addCondition(getReportSQLMaster(), lsCondition));
         
-        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        lsSQL = MiscUtil.addCondition(getReportSQLMaster(), lsCondition);
+        ResultSet rs = _instance.executeQuery(lsSQL);
         
+        while (!rs.next()) {
+            _message = "No record found...";
+            return false;
+//            if(rs.getString("sField01") == null){
+//                _message = "No record found...";
+//                return false;
+//            }
+        }
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         
@@ -235,11 +253,53 @@ public class DailyProduction implements GReport{
                                                     jrRS);
         } catch (JRException ex) {
             Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
         
         return true;
     }
     
+    private boolean printDetail() throws SQLException{
+        String lsCondition = "";
+        String lsDate = "";
+        
+        if (!System.getProperty("store.report.criteria.date").equals("")){
+            lsDate = System.getProperty("store.report.criteria.date");
+            lsCondition = "a.dTransact = " + SQLUtil.toSQL(lsDate);
+        } else lsCondition = "0=1";
+        System.out.println("Detail");
+        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
+       while (!rs.next()) {
+            
+            _message = "No record found...";
+            return false;
+        }
+        //Convert the data-source to JasperReport data-source
+        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        
+        //Create the parameter
+        Map<String, Object> params = new HashMap<>();
+        params.put("sCompnyNm", _instance.getClientName());  
+        params.put("sBranchNm", _instance.getBranchName());
+        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
+        params.put("sReportNm", System.getProperty("store.report.header"));      
+        params.put("sReportDt", !lsDate.equals("") ? lsDate : "");
+        params.put("sPrintdBy", _instance.getUserID());
+        
+        try {
+            _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
+                                                    System.getProperty("store.report.file"),
+                                                    params, 
+                                                    jrRS);
+            
+        } catch (JRException ex) {
+            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        
+        return true;
+    }
     private void closeReport(){
         _rptparam.forEach(item->System.clearProperty((String) item));
         System.clearProperty("store.report.file");
@@ -254,9 +314,30 @@ public class DailyProduction implements GReport{
     
     private String getReportSQL(){
         return "SELECT" +
-                    "  c.sBarCodex `sField01`" +
+                    " c.sBarCodex `sField01`" +
                     ", CONCAT(c.sDescript, '/', IFNULL(d.sDescript, 'NONE'), '/', IFNULL(e.sDescript, 'NONE'), '/', IFNULL(f.sMeasurNm, 'NONE')) `sField02`" +
-                    ", b.nQuantity `nField01`" +
+                    ", b.nQuantity `nField01`" + 
+                    ", c.nSelPrice `lField01`" +
+                    ", b.sTransNox `sField03`" +
+                " FROM Daily_Production_Master a" +
+                    ", Daily_Production_Detail b" +
+                        " LEFT JOIN Inventory c" +
+                            " ON b.sStockIDx = c.sStockIDx" + 
+                        " LEFT JOIN Model d" +
+                            " ON c.sModelCde = d.sModelCde" + 
+                        " LEFT JOIN Brand e" + 
+                            " ON c.sBrandCde = e.sBrandCde" + 
+                        " LEFT JOIN Measure f" +
+                            " ON c.sMeasurID = f.sMeasurID" + 
+                " WHERE a.sTransNox = b.sTransNox" +                    
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
+                " ORDER BY sField02, sField03 ASC";
+    }
+    private String getReportSQLMaster(){
+        return "SELECT" +
+                    " c.sBarcodex `sField01`" +
+                    ", CONCAT(c.sDescript, '/', IFNULL(d.sDescript, 'NONE'), '/', IFNULL(e.sDescript, 'NONE'), '/', IFNULL(f.sMeasurNm, 'NONE')) `sField02`" +
+                    ", SUM(IFNULL(b.nQuantity,0)) `nField01`" + 
                     ", c.nSelPrice `lField01`" +
                 " FROM Daily_Production_Master a" +
                     ", Daily_Production_Detail b" +
@@ -270,6 +351,7 @@ public class DailyProduction implements GReport{
                             " ON c.sMeasurID = f.sMeasurID" + 
                 " WHERE a.sTransNox = b.sTransNox" +                    
                     " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                " ORDER BY sField01, sField02";
+                " GROUP BY sField01 "+
+                " ORDER BY sField01, sField02 ASC";
     }
 }

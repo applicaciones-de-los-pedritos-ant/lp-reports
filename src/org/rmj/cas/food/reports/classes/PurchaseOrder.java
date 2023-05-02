@@ -182,7 +182,8 @@ public class PurchaseOrder implements GReport{
                     logReport();
                 }
                 JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true);                
+                jv.setVisible(true);   
+                jv.setAlwaysOnTop(true);             
             }
             
         } catch (SQLException ex) {
