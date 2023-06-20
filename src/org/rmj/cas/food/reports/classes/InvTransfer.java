@@ -33,6 +33,7 @@ import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
+import org.rmj.appdriver.constants.UserRight;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
@@ -58,7 +59,8 @@ public class InvTransfer implements GReport{
         _rptparam.add("store.report.is_log");
         
         _rptparam.add("store.report.criteria.presentation");
-        _rptparam.add("store.report.criteria.branch");      
+        _rptparam.add("store.report.criteria.branch");
+        _rptparam.add("store.report.criteria.destinat");
         _rptparam.add("store.report.criteria.group");        
         _rptparam.add("store.report.criteria.datefrom");     
         _rptparam.add("store.report.criteria.datethru");     
@@ -76,11 +78,12 @@ public class InvTransfer implements GReport{
 
     @Override
     public boolean getParam() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DateCriteria.fxml"));
-        fxmlLoader.setLocation(getClass().getResource("DateCriteria.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("InventoryTransferCriteria.fxml"));
+        fxmlLoader.setLocation(getClass().getResource("InventoryTransferCriteria.fxml"));
 
-        DateCriteriaController instance = new DateCriteriaController();
+        InventoryTransferCriteriaController instance = new InventoryTransferCriteriaController();
         instance.singleDayOnly(false);
+        instance.setGRider(_instance);
         
         try {
             
@@ -118,11 +121,11 @@ public class InvTransfer implements GReport{
         
         if (!instance.isCancelled()){            
             System.setProperty("store.default.debug", "true");
-//            System.setProperty("store.report.criteria.presentation", "1");
-            System.setProperty("store.report.criteria.presentation", String.valueOf(instance.getIndex()));
+            System.setProperty("store.report.criteria.presentation", instance.Presentation());
             System.setProperty("store.report.criteria.datefrom", instance.getDateFrom());
             System.setProperty("store.report.criteria.datethru", instance.getDateTo());
-            System.setProperty("store.report.criteria.branch", "");
+            System.setProperty("store.report.criteria.branch", instance.getOrigin());
+            System.setProperty("store.report.criteria.destinat", instance.getDestination());
             System.setProperty("store.report.criteria.group", "");
             return true;
         }
@@ -278,12 +281,23 @@ public class InvTransfer implements GReport{
         
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
+        params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");  
         params.put("sBranchNm", _instance.getBranchName());
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
         params.put("sReportNm", System.getProperty("store.report.header"));      
         params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
-        params.put("sPrintdBy", _instance.getUserID());
+        
+        String lsSQL = "SELECT sClientNm FROM Client_Master" +
+                        " WHERE sClientID IN (" +
+                            "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+        
+        ResultSet loRS = _instance.executeQuery(lsSQL);
+        
+        if (loRS.next()){
+            params.put("sPrintdBy", loRS.getString("sClientNm"));
+        } else {
+            params.put("sPrintdBy", "");
+        }
         
         try {
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
@@ -310,39 +324,80 @@ public class InvTransfer implements GReport{
     }
     
     private String getReportSQL(){
-        return "SELECT" +
-                    "  c.sBarCodex `sField01`" +
-                    ", CONCAT(c.sDescript, '/', IFNULL(d.sDescript, 'NONE'), '/', IFNULL(e.sDescript, 'NONE'), '/', IFNULL(f.sMeasurNm, 'NONE')) `sField02`" +
-                    ", b.nQuantity `nField01`" +
-                    ", b.nInvCostx `lField01`" +
-                    ", a.sTransNox `sField03`" +
-                    ", DATE_FORMAT(a.dTransact, '%M %d, %Y') `sField04`" +
+        String lsSQL = "SELECT" +
+                    "  g.sBranchNm `sField01`" +
+                    ", a.sTransNox `sField02`" +
+                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
+                    ", h.sDescript `sField04`" +
+                    ", c.sBarCodex `sField05`" +
+                    ", CONCAT(c.sDescript, IF(IFNULL(e.sDescript, '') = '', '', CONCAT('(', e.sDescript, ')'))) `sField06`" +
+                    ", IFNULL(f.sMeasurNm, '') `sField07`" +
+                    ", b.nQuantity `lField01`" +
+                    ", c.nUnitPrce `lField02`" +
                 " FROM Inv_Transfer_Master a" +
+                        " LEFT JOIN Branch g" +
+                            " ON a.sDestinat = g.sBranchCd" +
                     ", Inv_Transfer_Detail b" +
                         " LEFT JOIN Inventory c" +
                             " ON b.sStockIDx = c.sStockIDx" +
-                        " LEFT JOIN Model d" +
-                            " ON c.sModelCde = d.sModelCde" + 
                         " LEFT JOIN Brand e" + 
                             " ON c.sBrandCde = e.sBrandCde" + 
                         " LEFT JOIN Measure f" +
                             " ON c.sMeasurID = f.sMeasurID" + 
-                " WHERE a.sTransNox = b.sTransNox" +                    
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                " ORDER BY sField04, sField03, sField02";
+                        " LEFT JOIN Inv_Type h" +
+                            " ON c.sInvTypCd = h.sInvTypCd" +
+                " WHERE a.sTransNox = b.sTransNox";
+        
+        if (_instance.getUserLevel() >= UserRight.ENGINEER){
+            if (!System.getProperty("store.report.criteria.branch").isEmpty()){
+                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
+            }
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
+        
+        if (!System.getProperty("store.report.criteria.destinat").isEmpty()){
+            lsSQL = MiscUtil.addCondition(lsSQL, "a.sDestinat = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.destinat")));
+        }
+        
+        return lsSQL;
     }
+    
     private String getReportSQLSummary(){
-        return "SELECT " +
-                "  a.sTransNox    `sField01`, " +
-                "  a.sRemarksx    `sField02`, " +
-                "  SUM(b.nQuantity)   `nField01`, " +
-                "  b.sTransNox    `sField03`, " +
-                "  DATE_FORMAT(a.dTransact, '%M %d, %Y')    `sField04` " +
-                "FROM Inv_Transfer_Master a, " +
-                "  Inv_Transfer_Detail b " +
-                "WHERE a.sTransNox = b.sTransNox " +
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                "GROUP BY  a.dTransact, sField03     " +
-                "ORDER BY a.dTransact,b.sTransNox";
+        String lsSQL = "SELECT" +
+                            "  e.sBranchNm `sField01`" +
+                            ", d.sBranchNm `sField02`" +
+                            ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
+                            ", a.sTransNox `sField04`" +
+                            ", SUM(b.nQuantity)  `lField01`" +
+                            ", SUM(b.nQuantity * c.nUnitPrce) `lField02`" +
+                            ", CASE a.cTranStat" +
+                                " WHEN '0' THEN 'OPEN'" +
+                                " WHEN '1' THEN 'CONFIRMED'" +
+                                " WHEN '2' THEN 'RECIEVED'" +
+                                " WHEN '3' THEN 'CANCELLED'" +
+                                " WHEN '4' THEN 'VOID'" +
+                            " END `sField05`" +
+                        " FROM Inv_Transfer_Master a" +
+                            " LEFT JOIN Branch d ON a.sDestinat = d.sBranchCd" +
+                            " LEFT JOIN Branch e ON a.sBranchCd = e.sBranchCd" +
+                            ", Inv_Transfer_Detail b" +
+                            " LEFT JOIN Inventory c ON b.sStockIDx = c.sStockIDx" +
+                        " WHERE a.sTransNox = b.sTransNox" +                    
+                        " GROUP BY a.sTransNox";
+        
+        if (_instance.getUserLevel() >= UserRight.ENGINEER){
+            if (!System.getProperty("store.report.criteria.branch").isEmpty()){
+                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
+            }
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
+        
+        if (!System.getProperty("store.report.criteria.destinat").isEmpty()){
+            lsSQL = MiscUtil.addCondition(lsSQL, "a.sDestinat = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.destinat")));
+        }
+        
+        return lsSQL;
     }
 }

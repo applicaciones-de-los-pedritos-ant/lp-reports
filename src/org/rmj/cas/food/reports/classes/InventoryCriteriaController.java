@@ -3,8 +3,6 @@ package org.rmj.cas.food.reports.classes;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import java.net.URL;
 import java.text.ParseException;
-import java.time.LocalDate;
-import java.util.Date;
 import java.util.ResourceBundle;
 import javafx.beans.property.ReadOnlyBooleanPropertyBase;
 import javafx.beans.value.ChangeListener;
@@ -15,28 +13,30 @@ import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCode;
+import static javafx.scene.input.KeyCode.DOWN;
+import static javafx.scene.input.KeyCode.ENTER;
+import static javafx.scene.input.KeyCode.UP;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.json.simple.JSONObject;
 import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.agentfx.CommonUtils;
+import org.rmj.appdriver.agentfx.ui.showFXDialog;
 
 
 public class InventoryCriteriaController implements Initializable {
-
     @FXML private AnchorPane dataPane;
     @FXML private StackPane stack;
     @FXML private Pane pnePresentation;
     @FXML private RadioButton radioBtn01;
     @FXML private RadioButton radioBtn02;
-    @FXML private Pane pneGroup;
-    @FXML private RadioButton radioBtn03;
     @FXML private Button btnOk;
     @FXML private Button btnCancel;
-    @FXML private RadioButton radioBtn04;
-    @FXML private RadioButton radioBtn05;
     @FXML private Button btnExit;
     @FXML private FontAwesomeIconView glyphExit;
     @FXML private Pane pnePresentation1;
@@ -54,8 +54,10 @@ public class InventoryCriteriaController implements Initializable {
     public boolean isCancelled(){return pbCancelled;}
     public String Presentation(){return psPresentation;}
     public String GroupBy(){return psGroupBy;}
+    public String InvType(){return psInvTypCd;}
     
     public void isDetailedOnly(boolean fbValue){pbDetailedOnly = fbValue;}
+    public void setGRider(GRider foValue){poGRider = foValue;}
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -63,23 +65,16 @@ public class InventoryCriteriaController implements Initializable {
         btnOk.setOnAction(this::cmdButton_Click);
         btnCancel.setOnAction(this::cmdButton_Click);
         
-        radioBtn01.setOnAction(this::radioButton_Click);
-        radioBtn02.setOnAction(this::radioButton_Click);
-        radioBtn03.setOnAction(this::radioButton_Click);
-        radioBtn04.setOnAction(this::radioButton_Click);
-        radioBtn05.setOnAction(this::radioButton_Click);
-        
+        txtField00.setOnKeyPressed(this::txtField_KeyPressed);
         txtField00.focusedProperty().addListener(txtField_Focus);
         
         tgPresentation = new ToggleGroup();
         tgGroupBy = new ToggleGroup();
         
         tgPresentation.getToggles().addAll(radioBtn01, radioBtn02);
-        tgGroupBy.getToggles().addAll(radioBtn03, radioBtn04, radioBtn05);
         
         initButton();
         pbLoaded = true;
-        
     }
     
     private Stage getStage(){
@@ -89,36 +84,61 @@ public class InventoryCriteriaController implements Initializable {
     private void initButton(){
         radioBtn01.setDisable(pbDetailedOnly);
         
-        txtField00.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
-        psDateFrom = LocalDate.now().toString();
+        txtField00.setText("");
         radioBtn02.setSelected(true);
-        radioBtn03.setSelected(true);
+        
         psPresentation = "1";
-        psGroupBy = "";
     }
     
     private void radioButton_Click(ActionEvent event){
         String lsRadio = ((RadioButton) event.getSource()).getId();
         switch (lsRadio){
             case "radioBtn01":
-                pneGroup.setDisable(true);
-                radioBtn03.setSelected(true);
                 psPresentation = "0";
-                psGroupBy = "";
                 break;
             case "radioBtn02":
-                pneGroup.setDisable(false);
-                radioBtn03.setSelected(true);
                 psPresentation = "1";
                 break;
-            case "radioBtn03":
-                psGroupBy = ""; break;
-            case "radioBtn04":
-                psGroupBy = "sBinNamex"; break;
-            case "radioBtn05":
-                psGroupBy = "sInvTypCd";
         }
         
+    }
+    
+    private void txtField_KeyPressed(KeyEvent event){
+        TextField txtField = (TextField)event.getSource();
+        int lnIndex = Integer.parseInt(txtField.getId().substring(8, 10));
+        String lsValue = txtField.getText();
+        JSONObject loJSON = null;
+        
+        if (lnIndex == 0){
+            if (event.getCode() == KeyCode.F3){
+                loJSON = searchType(lsValue);
+                
+                if (loJSON != null){
+                    psInvTypCd = (String) loJSON.get("sInvTypCd");
+                    txtField00.setText((String) loJSON.get("sDescript"));
+                } else{
+                    psInvTypCd = "";
+                    txtField00.setText("");
+                }                    
+            }
+        }
+        
+        switch(event.getCode()){
+            case DOWN:
+            case ENTER:
+                CommonUtils.SetNextFocus(txtField);
+                break;
+            case UP:
+                CommonUtils.SetPreviousFocus(txtField);
+        }
+    }
+    
+    private JSONObject searchType(String fsValue){
+        String lsSQL = "SELECT sInvTypCd, sDescript" +
+                        " FROM Inv_Type" +
+                        " WHERE cRecdStat = '1'";
+        
+        return showFXDialog.jsonSearch(poGRider, lsSQL, fsValue, "ID»Type", "sInvTypCd»sDescript", "sInvTypCd»sDescript", 1);
     }
     
     private void cmdButton_Click (ActionEvent event){
@@ -139,9 +159,9 @@ public class InventoryCriteriaController implements Initializable {
     private static GRider poGRider;
     private boolean pbLoaded = false;
     private String pxeModuleName = "Inventory Report Criteria";
-    private final String pxeDateFormat = "yyyy-MM-dd";
-    private String psDateFrom = null;
-    
+    private String psInvTypCd = "";
+    private int pnIndex = -1;
+
     final ChangeListener<? super Boolean> txtField_Focus = (o,ov,nv)->{
         if (!pbLoaded) return;
         
@@ -151,41 +171,12 @@ public class InventoryCriteriaController implements Initializable {
         
         if (lsValue == null) return;
         
-        if(!nv){ /*Lost Focus*/     
-            switch (lnIndex){
-                case 0: /*dReceived*/
-                         if (CommonUtils.isDate(lsValue, pxeDateFormat)){
-                             psDateFrom = lsValue;
-                             txtField.setText(CommonUtils.xsDateMedium(CommonUtils.toDate(psDateFrom)));
-                         }else{
-                             ShowMessageFX.Warning("Invalid date entry.", pxeModuleName, "Date format must be yyyy-MM-dd (e.g. 1991-07-07)");
-                             psDateFrom = java.sql.Date.valueOf(LocalDate.now()).toString();
-                             txtField.setText(CommonUtils.xsDateMedium(CommonUtils.toDate(psDateFrom)));
-                         }
-                         return;
-                 }
-             } else{
-                 switch (lnIndex){
-                     case 0: /*dReceived*/
-                         try{
-                             txtField.setText(CommonUtils.xsDateShort(lsValue));
-                         }catch(ParseException e){
-                             ShowMessageFX.Error(e.getMessage(), pxeModuleName, null);
-                         }
-                         txtField.selectAll();
-                         break;
-                     default:
-                 }
-                 txtField.selectAll();
-             }
+        if(!nv){ /*Lost Focus*/
+            pnIndex = lnIndex;
+        }else{
+
+            pnIndex = lnIndex;
+            txtField.selectAll();
+        }
     };
-    
-    public String getDateTransNox(){
-        return psDateFrom;
-    }
-    
-    private void setDateTransNox(String fdTransNox){
-        this.psDateFrom = fdTransNox;
-    }
-    
 }

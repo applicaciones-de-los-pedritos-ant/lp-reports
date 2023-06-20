@@ -14,19 +14,19 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="dataPane" prefHeight="147.0" prefWidth="372.0" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="dataPane" prefHeight="147.0" prefWidth="372.0" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <StackPane fx:id="stack" layoutX="10.0" layoutY="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
       <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <top>
-            <AnchorPane minHeight="30.0" prefHeight="30.0" prefWidth="441.0" style="-fx-background-color: black;" BorderPane.alignment="CENTER">
+            <AnchorPane minHeight="30.0" prefHeight="30.0" prefWidth="441.0" style="-fx-background-color: #9e9e9e;" BorderPane.alignment="CENTER">
                <children>
                   <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="3.0" AnchorPane.topAnchor="0.0">
                      <image>
-                        <Image url="@../resources/ic_launcher1.png" />
+                        <Image url="@../resources/ic_launcher2.png" />
                      </image>
                   </ImageView>
-                  <Label text="Date Criteria" textFill="WHITE" AnchorPane.leftAnchor="30.0" AnchorPane.topAnchor="5.0">
+                  <Label text="Date Criteria" AnchorPane.leftAnchor="30.0" AnchorPane.topAnchor="5.0">
                      <font>
                         <Font name="System Bold" size="12.0" />
                      </font>
