@@ -33,6 +33,7 @@ import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
+import org.rmj.appdriver.constants.UserRight;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
@@ -136,16 +137,16 @@ public class PurchaseReceiving implements GReport{
     public boolean processReport() {
         boolean bResult = false;
         
-//        //Get the criteria as extracted from getParam()
-//        if(System.getProperty("store.report.criteria.presentation").equals("0")){
-//            System.setProperty("store.report.no", "1");
-//        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
-//            System.setProperty("store.report.no", "3");
-//        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
-//            System.setProperty("store.report.no", "4");
-//        }else{
+        //Get the criteria as extracted from getParam()
+        if(System.getProperty("store.report.criteria.presentation").equals("0")){
             System.setProperty("store.report.no", "1");
-//        }
+        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
+            System.setProperty("store.report.no", "3");
+        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
+            System.setProperty("store.report.no", "4");
+        }else{
+            System.setProperty("store.report.no", "2");
+        }
         
         //Load the jasper report to be use by this object
         String lsSQL = "SELECT sFileName, sReportHd" + 
@@ -177,14 +178,16 @@ public class PurchaseReceiving implements GReport{
                     bResult = printDetail();
             }
             
-            if(bResult){
-                if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
-                    logReport();
-                }
-                JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true); 
-                jv.setAlwaysOnTop(true);               
+            if(!bResult){
+                closeReport();
+                return false;
             }
+            if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
+                logReport();
+            }
+            JasperViewer jv = new JasperViewer(_jrprint, false);     
+            jv.setVisible(true);  
+            jv.setAlwaysOnTop(bResult);
             
         } catch (SQLException ex) {
             _message = ex.getMessage();
@@ -208,78 +211,90 @@ public class PurchaseReceiving implements GReport{
     }
     
     private boolean printSummary(){
-        String lsSQL = getReportSQL();
-        String lsCondition = "";
-        String lsDate = "";
-        
-        if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
-                !System.getProperty("store.report.criteria.datethru").equals("")){
-
-            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
-                        SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
-            
-            lsCondition = lsDate;
-            
-            lsSQL = MiscUtil.addCondition(lsSQL, "a.dTransact BETWEEN " + lsCondition);
-        }
-        
-        if (!System.getProperty("store.report.criteria.supplier").equals("")){
-            lsCondition = "a.sSupplier = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.supplier"));
-            
-            lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
-        }
-
-//        System.out.println(lsSQL);
-//        ResultSet rs=null;
-//        try {
-//            rs.updateString("sField01", "");
-//        } catch (SQLException ex) {
-//            Logger.getLogger(PurchaseReceiving.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        
-        ResultSet loRS = _instance.executeQuery(lsSQL);
-        
-//        try {
-//            String lsValue="";
-//            loRS.first();
-//            while(loRS.next()){
-//                if(lsValue!=loRS.getString("sField01")+loRS.getString("sField03")){
-//                }else{
-//                    loRS.updateString("sField01","");
-//                    loRS.updateString("sField03","");
-//                }
-//                
-//                lsValue=loRS.getString("sField01")+loRS.getString("sField03");
-//            }
-//        } catch (SQLException ex) {
-//            Logger.getLogger(PurchaseReceiving.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(loRS);
-        
-        //Create the parameter
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
-        params.put("sPrintdBy", _instance.getUserID());
-        
         try {
+            String lsSQL = getReportSQLSum();
+            String lsCondition = "";
+            String lsDate = "";
+
+            if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
+                    !System.getProperty("store.report.criteria.datethru").equals("")){
+
+                lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
+                            SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+
+                lsCondition = lsDate;
+
+                lsSQL = MiscUtil.addCondition(lsSQL, "a.dTransact BETWEEN " + lsCondition);
+            }
+
+            if (!System.getProperty("store.report.criteria.supplier").equals("")){
+                lsCondition = "a.sSupplier = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.supplier"));
+
+                lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
+            }
+
+            System.out.println(lsSQL);
+            ResultSet rs = _instance.executeQuery(lsSQL);
+
+            //Convert the data-source to JasperReport data-source
+            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+            //Create the parameter
+            Map<String, Object> params = new HashMap<>();
+            params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");  
+            params.put("sBranchNm", _instance.getBranchName());
+            params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
+            params.put("sReportNm", System.getProperty("store.report.header"));      
+            params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+
+            lsSQL = "SELECT sClientNm FROM Client_Master" +
+                    " WHERE sClientID IN (" +
+                        "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+            ResultSet loRS = _instance.executeQuery(lsSQL);
+
+            if (loRS.next()){
+                params.put("sPrintdBy", loRS.getString("sClientNm"));
+            } else {
+                params.put("sPrintdBy", "");
+            }
+            
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
                                                     System.getProperty("store.report.file"),
                                                     params, 
                                                     jrRS);
-        } catch (JRException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JRException | SQLException ex) {
+            ex.printStackTrace();
         }
         
         return true;
     }
     
-    private boolean printDetail(){
+    private String getReportSQLSum(){
+        return "SELECT" +
+                    "  a.sReferNox `sField01`" +
+                    ", IFNULL(c.sReferNox, '') `sField02`" +
+                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
+                    ", DATE_FORMAT(a.dRefernce, '%Y-%m-%d') `sField04`" +
+                    ", b.sClientNm `sField05`" +
+                    ", a.nTranTotl `lField01`" +
+                    ", a.nAmtPaidx `lField02`" +
+                    ", CASE a.cTranStat" +
+                         " WHEN '0' THEN 'OPEN'" +
+                         " WHEN '1' THEN 'APPROVED'" +
+                         " WHEN '2' THEN 'PAID'" +
+                         " WHEN '3' THEN 'CANCELLED'" +
+                         " WHEN '4' THEN 'VOID'" +
+                    " END `sField06`" +
+                " FROM PO_Receiving_Master a" + 
+                    " LEFT JOIN PO_Master c ON a.sSourceNo = c.sTransNox" +
+                    ", Client_Master b" +
+                " WHERE a.sSupplier = b.sClientID" +
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
+                    " AND a.cTranStat <> '3'";
+    }
+    
+    private boolean printDetail() throws SQLException{
         String lsSQL = getReportSQL();
         String lsCondition = "";
         String lsDate = "";
@@ -302,44 +317,33 @@ public class PurchaseReceiving implements GReport{
         }
 
         System.out.println(lsSQL);
-        ResultSet rs=null;
-        try {
-            rs.updateString("sField01", "");
-        } catch (SQLException ex) {
-            Logger.getLogger(PurchaseReceiving.class.getName()).log(Level.SEVERE, null, ex);
+        ResultSet rs = _instance.executeQuery(lsSQL);
+        while (!rs.next()) {
+           _message = "No record found...";
+           return false;
         }
-        
-        
-        
-        ResultSet loRS = _instance.executeQuery(lsSQL);
-        
-        try {
-            String lsValue="";
-            loRS.first();
-            while(loRS.next()){
-                if(lsValue!=loRS.getString("sClientNm")+loRS.getString("sBranchNm")){
-                    
-                }
-                
-                lsValue=loRS.getString("sClientNm")+loRS.getString("sBranchNm");
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(PurchaseReceiving.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        
-        
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
+        params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");  
         params.put("sBranchNm", _instance.getBranchName());
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
         params.put("sReportNm", System.getProperty("store.report.header"));      
         params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
-        params.put("sPrintdBy", _instance.getUserID());
+        
+        lsSQL = "SELECT sClientNm FROM Client_Master" +
+                " WHERE sClientID IN (" +
+                    "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+        
+        ResultSet loRS = _instance.executeQuery(lsSQL);
+        
+        if (loRS.next()){
+            params.put("sPrintdBy", loRS.getString("sClientNm"));
+        } else {
+            params.put("sPrintdBy", "");
+        }
         
         try {
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
@@ -366,34 +370,62 @@ public class PurchaseReceiving implements GReport{
     }
     
     private String getReportSQL(){
-        return "SELECT" +
-                    "  c.sClientNm sField01" +
-                    ", e.sDescript sField02" +
-	            ", f.sBranchNm sField03" +
-                    ", a.dTransact sField04" +
-                    ", SUM(b.nQuantity * b.nUnitPrce) lField01" +
-                    ", a.sReferNox sField05" +
-                    ", a.sTransNox" +
-                " FROM PO_Receiving_Master a" +
-                    ", PO_Receiving_Detail b" +
-                    ", Client_Master c" +
-                    ", Inventory d" +
-			" LEFT JOIN Category_Level4 e" +
-                            " ON d.sCategCd4 = e.sCategrCd" +
-                    ", Branch f" +
-                " WHERE a.sTransNox = b.sTransNox" +
-                    " AND a.sSupplier = c.sClientID" +
-                    " AND b.sStockIDx = d.sStockIDx" +
-                    " AND a.sBranchCd = f.sBranchCd" +
-                    " AND a.cTranStat IN ('1','2')" +
-                " GROUP BY sField01" +
-                    ", sField02" +
-                    ", sField03" +
-                    ", sField04" +
-                " ORDER BY sField01" +
-                    ", sField03" +
-                    ", sField02" +
-                    ", sField04" +
-                    ", sField05";
+        if (_instance.getUserLevel() >= UserRight.MANAGER){
+            return "SELECT" +
+                        "  a.sReferNox `sField01`" +
+                        ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
+                        ", g.sClientNm `sField03`" +	
+                        ", c.sBarCodex `sField04`" +
+                        ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
+                        ", IFNULL(f.sMeasurNm, '') `sField06`" +
+                        ", IFNULL(c.sInvTypCd, '') `sField07`" +
+                        ", b.nQuantity `nField01`" +
+                        ", b.nUnitPrce `lField01`" +
+                    " FROM PO_Master a" +
+                        " LEFT JOIN Client_Master g" + 
+                            " ON a.sSupplier = g.sClientID" + 
+                        " LEFT JOIN Branch h" +
+                            " ON a.sBranchCd = h.sBranchCd" +
+                        ", PO_Detail b" +
+                            " LEFT JOIN Inventory c" +
+                                " ON b.sStockIDx = c.sStockIDx" +
+                            " LEFT JOIN Model d" +
+                                " ON c.sModelCde = d.sModelCde" + 
+                            " LEFT JOIN Brand e" + 
+                                " ON c.sBrandCde = e.sBrandCde" + 
+                            " LEFT JOIN Measure f" +
+                                " ON c.sMeasurID = f.sMeasurID" + 
+                    " WHERE a.sTransNox = b.sTransNox" +                
+                        " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
+                        " AND a.cTranStat <> '3'";
+        } else {
+            return "SELECT" +
+                    "  a.sReferNox `sField01`" +
+                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
+                    ", g.sClientNm `sField03`" +	
+                    ", c.sBarCodex `sField04`" +
+                    ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
+                    ", IFNULL(f.sMeasurNm, '') `sField06`" +
+                    ", IFNULL(c.sInvTypCd, '') `sField07`" +
+                    ", b.nQuantity `nField01`" +
+                    ", 0.00 `lField01`" +
+                " FROM PO_Master a" +
+                    " LEFT JOIN Client_Master g" + 
+                        " ON a.sSupplier = g.sClientID" + 
+                    " LEFT JOIN Branch h" +
+                        " ON a.sBranchCd = h.sBranchCd" +
+                    ", PO_Detail b" +
+                        " LEFT JOIN Inventory c" +
+                            " ON b.sStockIDx = c.sStockIDx" +
+                        " LEFT JOIN Model d" +
+                            " ON c.sModelCde = d.sModelCde" + 
+                        " LEFT JOIN Brand e" + 
+                            " ON c.sBrandCde = e.sBrandCde" + 
+                        " LEFT JOIN Measure f" +
+                            " ON c.sMeasurID = f.sMeasurID" + 
+                " WHERE a.sTransNox = b.sTransNox" +                
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
+                    " AND a.cTranStat <> '3'";
+        }
     }
 }

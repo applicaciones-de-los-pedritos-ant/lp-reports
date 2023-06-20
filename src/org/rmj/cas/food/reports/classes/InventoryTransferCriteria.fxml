@@ -14,19 +14,19 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="dataPane" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="dataPane" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <StackPane fx:id="stack" layoutX="10.0" layoutY="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
       <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <top>
-            <AnchorPane minHeight="30.0" prefHeight="30.0" prefWidth="441.0" style="-fx-background-color: black;" BorderPane.alignment="CENTER">
+            <AnchorPane minHeight="30.0" prefHeight="30.0" prefWidth="441.0" style="-fx-background-color: #9e9e9e;" BorderPane.alignment="CENTER">
                <children>
                   <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="3.0" AnchorPane.topAnchor="0.0">
                      <image>
-                        <Image url="@../resources/ic_launcher1.png" />
+                        <Image url="@../resources/ic_launcher2.png" />
                      </image>
                   </ImageView>
-                  <Label text="Purchases Criteria" textFill="WHITE" AnchorPane.leftAnchor="30.0" AnchorPane.topAnchor="5.0">
+                  <Label text="Inventory Transfer Criteria" AnchorPane.leftAnchor="30.0" AnchorPane.topAnchor="5.0">
                      <font>
                         <Font name="System Bold" size="12.0" />
                      </font>
@@ -41,7 +41,7 @@
             </AnchorPane>
          </top>
          <right>
-            <AnchorPane prefHeight="167.0" prefWidth="100.0" style="-fx-background-color: #686868;" BorderPane.alignment="CENTER">
+            <AnchorPane prefHeight="167.0" prefWidth="100.0" style="-fx-background-color: #9e9e9e;" BorderPane.alignment="CENTER">
                <children>
                   <Button fx:id="btnOk" alignment="CENTER" contentDisplay="TOP" focusTraversable="false" minHeight="60.0" minWidth="100.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="98.0" text="Okay">
                      <graphic>
@@ -57,7 +57,7 @@
             </AnchorPane>
          </right>
          <center>
-            <AnchorPane maxHeight="-Infinity" prefHeight="185.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
+            <AnchorPane maxHeight="-Infinity" prefHeight="211.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
                <children>
                   <Pane layoutX="165.0" layoutY="10.0" prefHeight="96.0" prefWidth="256.0" style="-fx-border-color: white;">
                      <children>
@@ -82,15 +82,17 @@
                         <RadioButton fx:id="radioBtn01" layoutX="15.0" layoutY="42.0" mnemonicParsing="false" text="Summarized" />
                      </children>
                   </Pane>
-                  <Pane layoutX="11.0" layoutY="109.0" prefHeight="64.0" prefWidth="410.0" style="-fx-border-color: white;">
+                  <Pane layoutX="11.0" layoutY="109.0" prefHeight="93.0" prefWidth="410.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="13.0" layoutY="6.0" text="Filter By">
                            <font>
                               <Font name="System Bold" size="12.0" />
                            </font>
                         </Label>
-                        <Label layoutX="15.0" layoutY="35.0" text="Supplier" />
+                        <Label layoutX="15.0" layoutY="35.0" text="Origin" />
                         <TextField fx:id="txtField03" layoutX="88.0" layoutY="31.0" minHeight="25.0" prefHeight="25.0" prefWidth="312.0" />
+                        <TextField fx:id="txtField04" layoutX="88.0" layoutY="58.0" minHeight="25.0" prefHeight="25.0" prefWidth="312.0" />
+                        <Label layoutX="15.0" layoutY="62.0" text="Destination" />
                      </children>
                   </Pane>
                </children>

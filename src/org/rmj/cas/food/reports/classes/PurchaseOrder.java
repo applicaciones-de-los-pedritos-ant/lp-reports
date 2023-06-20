@@ -208,48 +208,59 @@ public class PurchaseOrder implements GReport{
     }
     
     private boolean printSummary(){
-        String lsSQL = getReportSQL();
-        String lsCondition = "";
-        String lsDate = "";
-        
-        if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
-                !System.getProperty("store.report.criteria.datethru").equals("")){
-
-            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
-                        SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
-            
-            lsCondition = lsDate;
-            
-            lsSQL = MiscUtil.addCondition(lsSQL, "a.dTransact BETWEEN " + lsCondition);
-        }
-        
-        if (!System.getProperty("store.report.criteria.supplier").equals("")){
-            lsCondition = "a.sSupplier = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.supplier"));
-            
-            lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
-        }
-
-        System.out.println(lsSQL);
-        ResultSet rs = _instance.executeQuery(lsSQL);
-        
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-        
-        //Create the parameter
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
-        params.put("sPrintdBy", _instance.getUserID());
-        
         try {
+            String lsSQL = getReportSQL();
+            String lsCondition = "";
+            String lsDate = "";
+
+            if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
+                    !System.getProperty("store.report.criteria.datethru").equals("")){
+
+                lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
+                            SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+
+                lsCondition = lsDate;
+
+                lsSQL = MiscUtil.addCondition(lsSQL, "a.dTransact BETWEEN " + lsCondition);
+            }
+
+            if (!System.getProperty("store.report.criteria.supplier").equals("")){
+                lsCondition = "a.sSupplier = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.supplier"));
+
+                lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
+            }
+
+            System.out.println(lsSQL);
+            ResultSet rs = _instance.executeQuery(lsSQL);
+
+            //Convert the data-source to JasperReport data-source
+            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+            //Create the parameter
+            Map<String, Object> params = new HashMap<>();
+            params.put("sCompnyNm", _instance.getClientName());  
+            params.put("sBranchNm", _instance.getBranchName());
+            params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
+            params.put("sReportNm", System.getProperty("store.report.header"));      
+            params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+
+            lsSQL = "SELECT sClientNm FROM Client_Master" +
+                            " WHERE sClientID IN (" +
+                                "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+            ResultSet loRS = _instance.executeQuery(lsSQL);
+
+            if (loRS.next()){
+                params.put("sPrintdBy", loRS.getString("sClientNm"));
+            } else {
+                params.put("sPrintdBy", "");
+            }
+
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
-                                                    System.getProperty("store.report.file"),
-                                                    params, 
-                                                    jrRS);
-        } catch (JRException ex) {
+                                                        System.getProperty("store.report.file"),
+                                                        params, 
+                                                        jrRS);
+        } catch (JRException | SQLException ex) {
             Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
         }
         
@@ -257,49 +268,60 @@ public class PurchaseOrder implements GReport{
     }
     
     private boolean printDetail(){
-        String lsSQL = getReportSQL();
-        String lsCondition = "";
-        String lsDate = "";
-        
-        if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
-                !System.getProperty("store.report.criteria.datethru").equals("")){
-
-            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
-                        SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
-            
-            lsCondition = lsDate;
-            
-            lsSQL = MiscUtil.addCondition(lsSQL, "a.dTransact BETWEEN " + lsCondition);
-        }
-        
-        if (!System.getProperty("store.report.criteria.supplier").equals("")){
-            lsCondition = "a.sSupplier = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.supplier"));
-            
-            lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
-        }
-
-        System.out.println(lsSQL);
-        ResultSet rs = _instance.executeQuery(lsSQL);
-        
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-        
-        //Create the parameter
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
-        params.put("sPrintdBy", _instance.getUserID());
-        
         try {
+            String lsSQL = getReportSQL();
+            String lsCondition = "";
+            String lsDate = "";
+
+            if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
+                    !System.getProperty("store.report.criteria.datethru").equals("")){
+
+                lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
+                            SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+
+                lsCondition = lsDate;
+
+                lsSQL = MiscUtil.addCondition(lsSQL, "a.dTransact BETWEEN " + lsCondition);
+            }
+
+            if (!System.getProperty("store.report.criteria.supplier").equals("")){
+                lsCondition = "a.sSupplier = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.supplier"));
+
+                lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
+            }
+
+            System.out.println(lsSQL);
+            ResultSet rs = _instance.executeQuery(lsSQL);
+
+            //Convert the data-source to JasperReport data-source
+            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+            //Create the parameter
+            Map<String, Object> params = new HashMap<>();
+            params.put("sCompnyNm", _instance.getClientName());  
+            params.put("sBranchNm", _instance.getBranchName());
+            params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
+            params.put("sReportNm", System.getProperty("store.report.header"));      
+            params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+
+            lsSQL = "SELECT sClientNm FROM Client_Master" +
+                        " WHERE sClientID IN (" +
+                            "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+            ResultSet loRS = _instance.executeQuery(lsSQL);
+
+            if (loRS.next()){
+                params.put("sPrintdBy", loRS.getString("sClientNm"));
+            } else {
+                params.put("sPrintdBy", "");
+            }
+        
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
                                                     System.getProperty("store.report.file"),
                                                     params, 
                                                     jrRS);
-        } catch (JRException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JRException | SQLException ex) {
+            ex.printStackTrace();
         }
         
         return true;
@@ -319,21 +341,18 @@ public class PurchaseOrder implements GReport{
     
     private String getReportSQL(){
         return "SELECT" +
-                    "  c.sBarCodex `sField01`" +
-                    ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript)), IF(IFNULL(f.sMeasurNm, '') = '', '', CONCAT(' / ', f.sMeasurNm))) `sField02`" +
+                    "  a.sReferNox `sField01`" +
+                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
+                    ", g.sClientNm `sField03`" +	
+                    ", c.sBarCodex `sField04`" +
+                    ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
+                    ", IFNULL(f.sMeasurNm, '') `sField06`" +
                     ", b.nQuantity `nField01`" +
-                    ", b.nUnitPrce `lField01`" +
-                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField04`" +
-                    ", g.sClientNm `sField03`" + 
-                    ", a.sReferNox `sField05`" +
-                    ", IFNULL(h.sBranchNm, '') `sField06`" +
-                    ", a.sRemarksx `sField07`" +
-                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField08`" +
                 " FROM PO_Master a" +
-                        " LEFT JOIN Client_Master g" + 
-                            " ON a.sSupplier = g.sClientID" + 
-                        " LEFT JOIN Branch h" +
-                            " ON a.sBranchCd = h.sBranchCd" +
+                    " LEFT JOIN Client_Master g" + 
+                        " ON a.sSupplier = g.sClientID" + 
+                    " LEFT JOIN Branch h" +
+                        " ON a.sBranchCd = h.sBranchCd" +
                     ", PO_Detail b" +
                         " LEFT JOIN Inventory c" +
                             " ON b.sStockIDx = c.sStockIDx" +
@@ -344,9 +363,8 @@ public class PurchaseOrder implements GReport{
                         " LEFT JOIN Measure f" +
                             " ON c.sMeasurID = f.sMeasurID" + 
                 " WHERE a.sTransNox = b.sTransNox" +                
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                    " AND a.cTranStat <> '3'" + 
-                " ORDER BY sField08, sField03, sField02";
+                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
+                    " AND a.cTranStat <> '3'";
     }
     
     private String getReportSQLSum(){

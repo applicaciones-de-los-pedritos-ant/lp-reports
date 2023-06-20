@@ -10,10 +10,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -38,6 +36,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.rmj.appdriver.GLogger;
 import org.rmj.appdriver.GRider;
+import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.agentfx.CommonUtils;
@@ -68,8 +67,8 @@ public class Inventory implements GReport{
         _rptparam.add("store.report.criteria.presentation");
         _rptparam.add("store.report.criteria.branch");      
         _rptparam.add("store.report.criteria.group");        
-        _rptparam.add("store.report.criteria.date");     
-        _rptparam.add("store.report.date.criteria");
+        _rptparam.add("store.report.criteria.date");
+        _rptparam.add("store.report.criteria.type");
     }
     
     @Override
@@ -89,6 +88,7 @@ public class Inventory implements GReport{
 
         InventoryCriteriaController instance = new InventoryCriteriaController();
         instance.isDetailedOnly(true);
+        instance.setGRider(_instance);
         
         try {
             
@@ -128,10 +128,9 @@ public class Inventory implements GReport{
             System.setProperty("store.default.debug", "true");
             System.setProperty("store.report.criteria.presentation", instance.Presentation());
             System.setProperty("store.report.criteria.group", instance.GroupBy());
+            System.setProperty("store.report.criteria.type", instance.InvType());
             System.setProperty("store.report.criteria.branch", "");
             System.setProperty("store.report.criteria.date", "");
-            System.out.println(instance.getDateTransNox());
-            System.setProperty("store.report.date.criteria", CommonUtils.xsDateShort(CommonUtils.toDate(instance.getDateTransNox())));
             return true;
         }
         return false;
@@ -181,11 +180,6 @@ public class Inventory implements GReport{
                 case 2: 
                     bResult = printDetail();
                     break;
-                case 3:
-                    bResult = printInvGrpByBin();
-                    break;
-                case 4:
-                    bResult = printInvGrpByType();
             }
             
             if(bResult){
@@ -224,144 +218,36 @@ public class Inventory implements GReport{
     }
     
     private boolean printDetail(){
-        
-        ResultSet rs = _instance.executeQuery(getReportSQLDate()+ " ,sField01, sField02");
-        //Convert the data-source to JasperReport data-source
-        
-        System.out.println(getReportSQLDate() + " ,sField01, sField02");
-        JSONArray json_mcsales = new JSONArray();
-        json_mcsales.clear();
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-        //Create the parameter
-        
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", "As of " + CommonUtils.xsDateMedium(CommonUtils.toDate(System.getProperty("store.report.date.criteria"))));
-        params.put("sPrintdBy", _instance.getUserID());
-        
         try {
+            ResultSet rs = _instance.executeQuery(getReportSQL());
+
+            JSONArray json_mcsales = new JSONArray();
+            json_mcsales.clear();
+            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");  
+            params.put("sBranchNm", _instance.getBranchName());
+            params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
+            params.put("sReportNm", System.getProperty("store.report.header"));
+
+            String lsSQL = "SELECT sClientNm FROM Client_Master" +
+                            " WHERE sClientID IN (" +
+                            "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+            ResultSet loRS = _instance.executeQuery(lsSQL);
+
+            if (loRS.next()){
+                params.put("sPrintdBy", loRS.getString("sClientNm"));
+            } else {
+                params.put("sPrintdBy", "");
+            }
+        
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
                                                     System.getProperty("store.report.file"),
                                                     params, 
                                                     jrRS);
-        } catch (JRException ex) {
-            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return true;
-    }
-    
-    //group by inventory type
-    private boolean printInvGrpByType(){
-        ResultSet rs = _instance.executeQuery(getReportSQLDate()+ " ,sField04, sField01, sField02");
-        
-        JSONArray json_mcsales = new JSONArray();
-        json_mcsales.clear();
-        try {
-            while (rs.next()) {
-                JSONObject json_mcsale = new JSONObject(); 
-                json_mcsale.put("sField01", rs.getString("sField01"));
-                json_mcsale.put("sField02", rs.getString("sField02"));
-                json_mcsale.put("sField03", rs.getString("sField03"));
-                json_mcsale.put("sField05", rs.getString("sField05"));
-                json_mcsale.put("sField06", rs.getString("sField06"));
-                json_mcsale.put("sField07", rs.getString("sField07"));
-                if(rs.getString("nField02")==null){
-                    json_mcsale.put("nField01", rs.getInt("nField01"));
-                }else{
-                    json_mcsale.put("nField01", rs.getInt("nField02"));
-                }
-//                json_mcsale.put("nField01", rs.getInt("nField01"));
-                json_mcsale.put("lField01", rs.getDouble("lField01"));
-                json_mcsale.put("sField04", rs.getString("sField04"));
-                json_mcsales.add(json_mcsale);
-            }              
-        } catch (SQLException ex) {
-            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
-        } 
-        
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-        JsonDataSource jrjson;
-        
-        //Create the parameter
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", "As of " + CommonUtils.xsDateMedium(CommonUtils.toDate(System.getProperty("store.report.date.criteria"))));
-        params.put("sPrintdBy", _instance.getUserID());
-        
-        try {
-            InputStream stream = new ByteArrayInputStream(json_mcsales.toJSONString().getBytes("UTF-8"));
-            jrjson = new JsonDataSource(stream); 
-        
-            _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
-                                                    System.getProperty("store.report.file"), params, jrjson);
- 
-        } catch (JRException ex) {
-            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return true;
-    }
-    
-    //group by bin location
-    private boolean printInvGrpByBin(){
-        ResultSet rs = _instance.executeQuery(getReportSQLDate()+ " ,sField03, sField01, sField02" );
-        
-        JSONArray json_mcsales = new JSONArray();
-        json_mcsales.clear();
-        try {
-            while (rs.next()) {
-                JSONObject json_mcsale = new JSONObject(); 
-                json_mcsale.put("sField01", rs.getString("sField01"));
-                json_mcsale.put("sField02", rs.getString("sField02"));
-                json_mcsale.put("sField03", rs.getString("sField03"));
-                json_mcsale.put("sField05", rs.getString("sField05"));
-                json_mcsale.put("sField06", rs.getString("sField06"));
-                json_mcsale.put("sField07", rs.getString("sField07"));
-                if(rs.getString("nField02")==null){
-                    json_mcsale.put("nField01", rs.getInt("nField01"));
-                }else{
-                    json_mcsale.put("nField01", rs.getInt("nField02"));
-                }
-                json_mcsale.put("lField01", rs.getDouble("lField01"));
-                json_mcsales.add(json_mcsale);
-            }              
-        } catch (SQLException ex) {
-            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
-        } 
-        
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-        JsonDataSource jrjson;
-        
-        //Create the parameter
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", _instance.getClientName());  
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", System.getProperty("store.report.header"));      
-        params.put("sReportDt", "As of " + CommonUtils.xsDateMedium(CommonUtils.toDate(System.getProperty("store.report.date.criteria"))));
-        params.put("sPrintdBy", _instance.getUserID());
-        
-        try {
-            InputStream stream = new ByteArrayInputStream(json_mcsales.toJSONString().getBytes("UTF-8"));
-            jrjson = new JsonDataSource(stream); 
-        
-            _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
-                                                    System.getProperty("store.report.file"), params, jrjson);
- 
-        } catch (JRException ex) {
-            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (UnsupportedEncodingException ex) {
+        } catch (JRException | SQLException ex) {
             Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
         }
         
@@ -381,31 +267,30 @@ public class Inventory implements GReport{
     }
     
     private String getReportSQL(){
-        return "SELECT" +
-                    "  b.sBarCodex `sField01`" +
-                    ", b.sDescript `sField02`" +
-                    ", a.nBinNumbr `sField03`" +
-                    ", a.nQtyOnHnd `nField01`" +
-                    ", b.nSelPrice `lField01`" +
-                    ", IFNULL(c.sDescript, '') `sField04`" +
-                    ", IFNULL(d.sDescript, '') `sField05`" +
-                    ", IFNULL(e.sDescript, '') `sField06`" +
-                    ", IFNULL(f.sMeasurNm, '') `sField07`" +
-                " FROM Inv_Master a" +
-                    ", Inventory b" +
-                        " LEFT JOIN Inv_Type c" +
-                            " ON b.sInvTypCd = c.sInvTypCd" +
-                        " LEFT JOIN Brand d" +
-                            " ON b.sBrandCde = d.sBrandCde" +
-                        " LEFT JOIN Model e" +
-                            " ON b.sModelCde = e.sModelCde" +
-                        " LEFT JOIN Measure f" +
-                            " ON b.sMeasurID = f.sMeasurID" +
-                " WHERE a.sStockIDx = b.sStockIDx" +
-                    " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                    " AND IFNULL(a.nQtyOnHnd, 0) > 0";
+        String lsSQL = "SELECT" +
+                            "  IFNULL(c.sDescript, '') `sField01`" +
+                            ", b.sBarCodex `sField02`" +
+                            ", TRIM(CONCAT(b.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT('(', d.sDescript, ')')))) `sField03`" +
+                            ", IFNULL(f.sMeasurNm, '') `sField04`" +
+                            ", a.nQtyOnHnd `lField01`" +
+                            ", b.nUnitPrce `lField02`" +
+                            ", b.nSelPrice `lField03`" +
+                        " FROM Inv_Master a" +
+                            " , Inventory b" +
+                                " LEFT JOIN Inv_Type c" +
+                                    " ON b.sInvTypCd = c.sInvTypCd" +
+                                " LEFT JOIN Brand d" +
+                                    " ON b.sBrandCde = d.sBrandCde" +
+                                " LEFT JOIN Measure f" +
+                                    " ON b.sMeasurID = f.sMeasurID" +
+                        " WHERE a.sStockIDx = b.sStockIDx" +
+                            " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         
-        //" AND IFNULL(a.nQtyOnHnd, 0) > 0" +
+        if (!System.getProperty("store.report.criteria.type").isEmpty()){
+            lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
+        }
+        
+        return lsSQL;
     }
     
     private String getReportSQLDate(){
@@ -440,7 +325,6 @@ public class Inventory implements GReport{
                                 " ON b.sMeasurID = f.sMeasurID" +
                     " WHERE a.sStockIDx = b.sStockIDx" +
                         " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                        " AND IFNULL(a.nQtyOnHnd, 0) > 0" +
                         " AND a.dBegInvxx <= " + SQLUtil.toSQL(lsDate) +
                     " ORDER BY" +
                         " g.nLedgerNo DESC) xSourceTable" +
