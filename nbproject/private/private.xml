@@ -17,8 +17,14 @@
             <file>file:/C:/Users/User/OneDrive/Documents/GitHub/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseReceiving.java</file>
         </group>
         <group name="LP IntegSys">
-            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryCriteriaController.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseOrder.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/Purchases.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseReceiving.java</file>
             <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/Inventory.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryCriteriaController.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InvTransfer.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InvWaste.java</file>
+            <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/DailyProduction.java</file>
         </group>
     </open-files>
 </project-private>

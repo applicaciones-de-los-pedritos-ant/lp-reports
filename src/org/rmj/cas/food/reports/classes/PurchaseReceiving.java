@@ -271,27 +271,32 @@ public class PurchaseReceiving implements GReport{
     }
     
     private String getReportSQLSum(){
-        return "SELECT" +
-                    "  a.sReferNox `sField01`" +
-                    ", IFNULL(c.sReferNox, '') `sField02`" +
-                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
-                    ", DATE_FORMAT(a.dRefernce, '%Y-%m-%d') `sField04`" +
-                    ", b.sClientNm `sField05`" +
-                    ", a.nTranTotl `lField01`" +
-                    ", a.nAmtPaidx `lField02`" +
-                    ", CASE a.cTranStat" +
-                         " WHEN '0' THEN 'OPEN'" +
-                         " WHEN '1' THEN 'APPROVED'" +
-                         " WHEN '2' THEN 'PAID'" +
-                         " WHEN '3' THEN 'CANCELLED'" +
-                         " WHEN '4' THEN 'VOID'" +
-                    " END `sField06`" +
-                " FROM PO_Receiving_Master a" + 
-                    " LEFT JOIN PO_Master c ON a.sSourceNo = c.sTransNox" +
-                    ", Client_Master b" +
-                " WHERE a.sSupplier = b.sClientID" +
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                    " AND a.cTranStat <> '3'";
+        String lsSQL = "SELECT" +
+                            "  a.sReferNox `sField01`" +
+                            ", IFNULL(c.sReferNox, '') `sField02`" +
+                            ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
+                            ", DATE_FORMAT(a.dRefernce, '%Y-%m-%d') `sField04`" +
+                            ", b.sClientNm `sField05`" +
+                            ", a.nTranTotl `lField01`" +
+                            ", a.nAmtPaidx `lField02`" +
+                            ", CASE a.cTranStat" +
+                                 " WHEN '0' THEN 'OPEN'" +
+                                 " WHEN '1' THEN 'APPROVED'" +
+                                 " WHEN '2' THEN 'PAID'" +
+                                 " WHEN '3' THEN 'CANCELLED'" +
+                                 " WHEN '4' THEN 'VOID'" +
+                            " END `sField06`" +
+                        " FROM PO_Receiving_Master a" + 
+                            " LEFT JOIN PO_Master c ON a.sSourceNo = c.sTransNox" +
+                            ", Client_Master b" +
+                        " WHERE a.sSupplier = b.sClientID" +
+                            " AND a.cTranStat <> '3'";
+        
+        if (_instance.getUserLevel() < UserRight.ENGINEER){
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
+        
+        return lsSQL;
     }
     
     private boolean printDetail() throws SQLException{
@@ -370,62 +375,37 @@ public class PurchaseReceiving implements GReport{
     }
     
     private String getReportSQL(){
-        if (_instance.getUserLevel() >= UserRight.MANAGER){
-            return "SELECT" +
-                        "  a.sReferNox `sField01`" +
-                        ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
-                        ", g.sClientNm `sField03`" +	
-                        ", c.sBarCodex `sField04`" +
-                        ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
-                        ", IFNULL(f.sMeasurNm, '') `sField06`" +
-                        ", IFNULL(c.sInvTypCd, '') `sField07`" +
-                        ", b.nQuantity `nField01`" +
-                        ", b.nUnitPrce `lField01`" +
-                    " FROM PO_Master a" +
-                        " LEFT JOIN Client_Master g" + 
-                            " ON a.sSupplier = g.sClientID" + 
-                        " LEFT JOIN Branch h" +
-                            " ON a.sBranchCd = h.sBranchCd" +
-                        ", PO_Detail b" +
-                            " LEFT JOIN Inventory c" +
-                                " ON b.sStockIDx = c.sStockIDx" +
-                            " LEFT JOIN Model d" +
-                                " ON c.sModelCde = d.sModelCde" + 
-                            " LEFT JOIN Brand e" + 
-                                " ON c.sBrandCde = e.sBrandCde" + 
-                            " LEFT JOIN Measure f" +
-                                " ON c.sMeasurID = f.sMeasurID" + 
-                    " WHERE a.sTransNox = b.sTransNox" +                
-                        " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                        " AND a.cTranStat <> '3'";
-        } else {
-            return "SELECT" +
-                    "  a.sReferNox `sField01`" +
-                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
-                    ", g.sClientNm `sField03`" +	
-                    ", c.sBarCodex `sField04`" +
-                    ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
-                    ", IFNULL(f.sMeasurNm, '') `sField06`" +
-                    ", IFNULL(c.sInvTypCd, '') `sField07`" +
-                    ", b.nQuantity `nField01`" +
-                    ", 0.00 `lField01`" +
-                " FROM PO_Master a" +
-                    " LEFT JOIN Client_Master g" + 
-                        " ON a.sSupplier = g.sClientID" + 
-                    " LEFT JOIN Branch h" +
-                        " ON a.sBranchCd = h.sBranchCd" +
-                    ", PO_Detail b" +
-                        " LEFT JOIN Inventory c" +
-                            " ON b.sStockIDx = c.sStockIDx" +
-                        " LEFT JOIN Model d" +
-                            " ON c.sModelCde = d.sModelCde" + 
-                        " LEFT JOIN Brand e" + 
-                            " ON c.sBrandCde = e.sBrandCde" + 
-                        " LEFT JOIN Measure f" +
-                            " ON c.sMeasurID = f.sMeasurID" + 
-                " WHERE a.sTransNox = b.sTransNox" +                
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                    " AND a.cTranStat <> '3'";
+        String lsSQL = "SELECT" +
+                            "  a.sReferNox `sField01`" +
+                            ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
+                            ", g.sClientNm `sField03`" +	
+                            ", c.sBarCodex `sField04`" +
+                            ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
+                            ", IFNULL(f.sMeasurNm, '') `sField06`" +
+                            ", IFNULL(c.sInvTypCd, '') `sField07`" +
+                            ", b.nQuantity `nField01`" +
+                            ", b.nUnitPrce `lField01`" +
+                        " FROM PO_Master a" +
+                            " LEFT JOIN Client_Master g" + 
+                                " ON a.sSupplier = g.sClientID" + 
+                            " LEFT JOIN Branch h" +
+                                " ON a.sBranchCd = h.sBranchCd" +
+                            ", PO_Detail b" +
+                                " LEFT JOIN Inventory c" +
+                                    " ON b.sStockIDx = c.sStockIDx" +
+                                " LEFT JOIN Model d" +
+                                    " ON c.sModelCde = d.sModelCde" + 
+                                " LEFT JOIN Brand e" + 
+                                    " ON c.sBrandCde = e.sBrandCde" + 
+                                " LEFT JOIN Measure f" +
+                                    " ON c.sMeasurID = f.sMeasurID" + 
+                        " WHERE a.sTransNox = b.sTransNox" +                
+                            " AND a.cTranStat <> '3'";
+        
+        if (_instance.getUserLevel() < UserRight.ENGINEER){
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
         }
+        
+        return lsSQL;
     }
 }

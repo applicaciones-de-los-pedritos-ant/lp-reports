@@ -39,6 +39,7 @@ import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
+import org.rmj.appdriver.constants.UserRight;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
@@ -225,7 +226,7 @@ public class DailyProduction implements GReport{
             lsCondition = "a.dTransact BETWEEN " + lsCondition;
         } else lsCondition = "0 = 1";
         
-        lsSQL = MiscUtil.addCondition(getReportSQL(), lsCondition);
+        lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
         
         ResultSet rs = _instance.executeQuery(lsSQL);
         
@@ -237,7 +238,7 @@ public class DailyProduction implements GReport{
         params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");  
         params.put("sBranchNm", _instance.getBranchName());
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-        params.put("sReportNm", !lsDate.equals("") ? lsDate : "");
+        params.put("sReportNm", System.getProperty("store.report.header"));
         params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
         
         lsSQL = "SELECT sClientNm FROM Client_Master" +
@@ -251,9 +252,7 @@ public class DailyProduction implements GReport{
         } else {
             params.put("sPrintdBy", "");
         }
-        
-        
-        
+
         try {
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
                                                     System.getProperty("store.report.file"),
@@ -349,6 +348,7 @@ public class DailyProduction implements GReport{
                             ", IFNULL(d.`sMeasurNm`, '') `sField04`" +
                             ", b.nQuantity `nField01`" + 
                             ", c.nUnitPrce `lField01`" +
+                            ", a.sTransNox `sField05`" +
                         " FROM Daily_Production_Master a" +
                             ", Daily_Production_Detail b" +
                             " LEFT JOIN Inventory c" +
@@ -357,6 +357,11 @@ public class DailyProduction implements GReport{
                                 " ON c.sMeasurID = d.sMeasurID" + 
                         " WHERE a.sTransNox = b.sTransNox" +
                             " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode());
+        
+        if (_instance.getUserLevel() < UserRight.ENGINEER){
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }        
+        
         return lsSQL;
     }
     private String getReportSQLMaster(){
@@ -374,8 +379,12 @@ public class DailyProduction implements GReport{
                             " LEFT JOIN Measure d" +
                                 " ON c.sMeasurID = d.sMeasurID" + 
                         " WHERE a.sTransNox = b.sTransNox" +
-                            " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
                         " GROUP BY c.sBarCodex";
+        
+        if (_instance.getUserLevel() < UserRight.ENGINEER){
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
+        
         return lsSQL;
     }
 }
