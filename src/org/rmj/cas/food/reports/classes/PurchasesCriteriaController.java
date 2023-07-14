@@ -24,6 +24,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.json.simple.JSONObject;
 import org.rmj.appdriver.GRider;
+import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.agentfx.CommonUtils;
 import org.rmj.appdriver.agentfx.ui.showFXDialog;
@@ -123,12 +124,13 @@ public class PurchasesCriteriaController implements Initializable {
                 pbCancelled = true; break;
             case "btnOk":
                 try {
+                    btnOk.requestFocus();
                     if(CommonUtils.isDate(txtField01.getText(), pxeDateFormat))
-                        psDateFrom = txtField01.getText();
+                        psDateFrom = SQLUtil.dateFormat(SQLUtil.toDate(txtField01.getText(), SQLUtil.FORMAT_LONG_DATE),SQLUtil.FORMAT_SHORT_DATE);
                     else psDateFrom = CommonUtils.xsDateShort(txtField01.getText());
                     
                     if(CommonUtils.isDate(txtField02.getText(), pxeDateFormat))
-                        psDateThru = txtField02.getText();
+                        psDateThru =  SQLUtil.dateFormat(SQLUtil.toDate(txtField02.getText(), SQLUtil.FORMAT_LONG_DATE),SQLUtil.FORMAT_SHORT_DATE);
                     else 
                         psDateThru = CommonUtils.xsDateShort(txtField02.getText());
                 } catch (ParseException e) {
@@ -205,7 +207,7 @@ public class PurchasesCriteriaController implements Initializable {
     
     public final String pxeModuleName = "org.rmj.reportmenufx.views.DateCriteriaController";
     private static GRider poGRider;
-    private final String pxeDateFormat = "yyyy-MM-dd";
+    private final String pxeDateFormat = "MM-dd-yyyy";
     private static final String pxeDefaultDate =java.time.LocalDate.now().toString();
     private boolean pbLoaded = false;
     private int pnIndex = -1;
@@ -224,7 +226,7 @@ public class PurchasesCriteriaController implements Initializable {
                 case 1: /*dDateFrom*/
                 case 2: /*dDateThru*/
                    if(CommonUtils.isDate(txtField.getText(), pxeDateFormat)){
-                         txtField.setText(CommonUtils.xsDateMedium(CommonUtils.toDate(txtField.getText())));
+                        txtField.setText(SQLUtil.dateFormat(SQLUtil.toDate(txtField.getText(), pxeDateFormat),SQLUtil.FORMAT_LONG_DATE));
                     }else{
                         txtField.setText(CommonUtils.xsDateMedium(CommonUtils.toDate(pxeDefaultDate)));
                     }
@@ -242,11 +244,7 @@ public class PurchasesCriteriaController implements Initializable {
             switch (lnIndex){
                 case 1:
                 case 2:
-                    try{
-                        txtField.setText(CommonUtils.xsDateShort(lsValue));
-                    }catch(ParseException e){
-                        ShowMessageFX.Error(getStage(), e.getMessage(), pxeModuleName, null);
-                    }
+                    txtField.setText(SQLUtil.dateFormat(SQLUtil.toDate(txtField.getText(), SQLUtil.FORMAT_LONG_DATE),pxeDateFormat));
                     txtField.selectAll();
                     break;
                 default:
