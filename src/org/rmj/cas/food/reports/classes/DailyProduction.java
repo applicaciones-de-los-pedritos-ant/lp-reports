@@ -24,7 +24,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.stage.Stage;                                                                                                   
 import javafx.stage.StageStyle;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRResultSetDataSource;
@@ -346,6 +346,7 @@ public class DailyProduction implements GReport{
                             ", c.sBarCodex `sField02`" +
                             ", c.sDescript `sField03`" +
                             ", IFNULL(d.`sMeasurNm`, '') `sField04`" +
+                            ", IFNULL(e.`sDescript`, '') `sField05`" +
                             ", b.nQuantity `nField01`" + 
                             ", c.nUnitPrce `lField01`" +
                             ", a.sTransNox `sField05`" +
@@ -355,6 +356,8 @@ public class DailyProduction implements GReport{
                                 " ON b.sStockIDx = c.sStockIDx" +
                             " LEFT JOIN Measure d" +
                                 " ON c.sMeasurID = d.sMeasurID" + 
+                            " LEFT JOIN Brand e" + 
+                                " ON c.sBrandCde = e.sBrandCde" + 
                         " WHERE a.sTransNox = b.sTransNox" +
                             " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode());
         
