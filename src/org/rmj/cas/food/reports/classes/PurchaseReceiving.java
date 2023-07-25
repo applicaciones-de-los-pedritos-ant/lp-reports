@@ -271,27 +271,32 @@ public class PurchaseReceiving implements GReport{
     }
     
     private String getReportSQLSum(){
-        return "SELECT" +
-                    "  a.sReferNox `sField01`" +
-                    ", IFNULL(c.sReferNox, '') `sField02`" +
-                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
-                    ", DATE_FORMAT(a.dRefernce, '%Y-%m-%d') `sField04`" +
-                    ", b.sClientNm `sField05`" +
-                    ", a.nTranTotl `lField01`" +
-                    ", a.nAmtPaidx `lField02`" +
-                    ", CASE a.cTranStat" +
-                         " WHEN '0' THEN 'OPEN'" +
-                         " WHEN '1' THEN 'APPROVED'" +
-                         " WHEN '2' THEN 'PAID'" +
-                         " WHEN '3' THEN 'CANCELLED'" +
-                         " WHEN '4' THEN 'VOID'" +
-                    " END `sField06`" +
-                " FROM PO_Receiving_Master a" + 
-                    " LEFT JOIN PO_Master c ON a.sSourceNo = c.sTransNox" +
-                    ", Client_Master b" +
-                " WHERE a.sSupplier = b.sClientID" +
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                    " AND a.cTranStat <> '3'";
+        String lsSQL = "SELECT" +
+                            "  a.sReferNox `sField01`" +
+                            ", IFNULL(c.sReferNox, '') `sField02`" +
+                            ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
+                            ", DATE_FORMAT(a.dRefernce, '%Y-%m-%d') `sField04`" +
+                            ", b.sClientNm `sField05`" +
+                            ", a.nTranTotl `lField01`" +
+                            ", a.nAmtPaidx `lField02`" +
+                            ", CASE a.cTranStat" +
+                                 " WHEN '0' THEN 'OPEN'" +
+                                 " WHEN '1' THEN 'APPROVED'" +
+                                 " WHEN '2' THEN 'PAID'" +
+                                 " WHEN '3' THEN 'CANCELLED'" +
+                                 " WHEN '4' THEN 'VOID'" +
+                            " END `sField06`" +
+                        " FROM PO_Receiving_Master a" + 
+                            " LEFT JOIN PO_Master c ON a.sSourceNo = c.sTransNox" +
+                            ", Client_Master b" +
+                        " WHERE a.sSupplier = b.sClientID" +
+                            " AND a.cTranStat <> '3'";
+        
+        if (_instance.getUserLevel() < UserRight.ENGINEER){
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
+        
+        return lsSQL;
     }
     
     private boolean printDetail() throws SQLException{
@@ -370,7 +375,7 @@ public class PurchaseReceiving implements GReport{
     }
     
     private String getReportSQL(){
-        if (_instance.getUserLevel() >= UserRight.MANAGER){
+        if (_instance.getUserLevel() > UserRight.MANAGER){
             return "SELECT" +
                         "  a.sReferNox `sField01`" +
                         ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
@@ -396,7 +401,6 @@ public class PurchaseReceiving implements GReport{
                             " LEFT JOIN Measure f" +
                                 " ON c.sMeasurID = f.sMeasurID" + 
                     " WHERE a.sTransNox = b.sTransNox" +                
-                        " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
                         " AND a.cTranStat <> '3'";
         } else {
             return "SELECT" +
@@ -428,5 +432,7 @@ public class PurchaseReceiving implements GReport{
                     " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
                     " AND a.cTranStat <> '3'";
         }
+        
+        return lsSQL;
     }
 }

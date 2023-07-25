@@ -336,7 +336,7 @@ public class Purchases implements GReport{
     }
     
     private String getReportSQL(){
-        if (_instance.getUserLevel() >= UserRight.MANAGER){
+        if (_instance.getUserLevel() > UserRight.MANAGER){
             return "SELECT" +
                         "  a.sReferNox `sField01`" +
                         ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
@@ -392,29 +392,36 @@ public class Purchases implements GReport{
                         " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
                         " AND a.cTranStat <> '3'";
         }
+        
+        return lsSQL;
     }
     
     private String getReportSQLSum(){
-        return "SELECT" +
-                    "  a.sReferNox `sField01`" +
-                    ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
-                    ", b.sClientNm `sField03`" +
-                    ", IFNULL(c.sBranchNm, '') `sField04`" +
-                    ", IFNULL(d.sDescript, '') `sField05`" +
-                    ", a.nTranTotl `lField01`" +
-                    ", CASE a.cTranStat" +
-                        " WHEN '0' THEN 'OPEN'" +
-                        " WHEN '1' THEN 'APPROVED'" +
-                        " WHEN '2' THEN 'POSTED'" +
-                        " WHEN '3' THEN 'CANCELLED'" +
-                        " WHEN '4' THEN 'VOID'" +
-                        " END `sField06`" +
-                " FROM PO_Master a" + 
-                    " LEFT JOIN Branch c  ON a.sBranchCd = c.sBranchCd" +
-                    " LEFT JOIN Term d ON a.sTermCode = d.sTermCode" +
-                    ", Client_Master b" +
-                " WHERE a.sSupplier = b.sClientID" +
-                    " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) + 
-                    " AND a.cTranStat <> '3'";
+        String lsSQL =  "SELECT" +
+                            "  a.sReferNox `sField01`" +
+                            ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
+                            ", b.sClientNm `sField03`" +
+                            ", IFNULL(c.sBranchNm, '') `sField04`" +
+                            ", IFNULL(d.sDescript, '') `sField05`" +
+                            ", a.nTranTotl `lField01`" +
+                            ", CASE a.cTranStat" +
+                                " WHEN '0' THEN 'OPEN'" +
+                                " WHEN '1' THEN 'APPROVED'" +
+                                " WHEN '2' THEN 'POSTED'" +
+                                " WHEN '3' THEN 'CANCELLED'" +
+                                " WHEN '4' THEN 'VOID'" +
+                                " END `sField06`" +
+                        " FROM PO_Master a" + 
+                            " LEFT JOIN Branch c  ON a.sBranchCd = c.sBranchCd" +
+                            " LEFT JOIN Term d ON a.sTermCode = d.sTermCode" +
+                            ", Client_Master b" +
+                        " WHERE a.sSupplier = b.sClientID" + 
+                            " AND a.cTranStat <> '3'";
+        
+        if (_instance.getUserLevel() < UserRight.ENGINEER){
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
+        
+        return lsSQL;
     }
 }
