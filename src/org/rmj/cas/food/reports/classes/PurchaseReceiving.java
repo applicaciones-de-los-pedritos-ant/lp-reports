@@ -404,9 +404,10 @@ public class PurchaseReceiving implements GReport{
                     ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
                     ", g.sClientNm `sField03`" +	
                     ", c.sBarCodex `sField04`" +
-                    ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
+                    ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))) `sField05`" +
                     ", IFNULL(f.sMeasurNm, '') `sField06`" +
                     ", IFNULL(c.sInvTypCd, '') `sField07`" +
+                    ", IFNULL(e.sDescript, '') `sField08`" +
                     ", b.nQuantity `nField01`" +
                     ", 0.00 `lField01`" +
                 " FROM PO_Master a" +

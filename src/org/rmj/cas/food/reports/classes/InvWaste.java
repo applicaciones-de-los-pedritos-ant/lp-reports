@@ -311,10 +311,11 @@ public class InvWaste implements GReport{
     private String getReportSQL(){
         return "SELECT" +
                     "  c.sBarCodex `sField01`" +
-                    ", CONCAT(c.sDescript, '/', IFNULL(d.sDescript, 'NONE'), '/', IFNULL(e.sDescript, 'NONE'), '/', IFNULL(f.sMeasurNm, 'NONE')) `sField02`" +
+                    ", CONCAT(c.sDescript, '/', IFNULL(d.sDescript, 'NONE'), '/',  IFNULL(f.sMeasurNm, 'NONE')) `sField02`" +
                     ", b.nQuantity `nField01`" +
                     ", b.nInvCostx `lField01`" +
                     ", a.sTransNox `sField03`" +
+                    ", IFNULL(e.sDescript, '') `sField04`" +
                     ", DATE_FORMAT(a.dTransact, '%M %d, %Y') `sField04`" +
                 " FROM Inv_Waste_Master a" +
                     ", Inv_Waste_Detail b" +

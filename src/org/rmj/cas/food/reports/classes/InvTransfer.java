@@ -330,8 +330,9 @@ public class InvTransfer implements GReport{
                     ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
                     ", h.sDescript `sField04`" +
                     ", c.sBarCodex `sField05`" +
-                    ", CONCAT(c.sDescript, IF(IFNULL(e.sDescript, '') = '', '', CONCAT('(', e.sDescript, ')'))) `sField06`" +
+                    ", IFNULL(c.sDescript, '') `sField06`" +
                     ", IFNULL(f.sMeasurNm, '') `sField07`" +
+                    ", IFNULL(e.sDescript, '') `sField08`" +
                     ", b.nQuantity `lField01`" +
                     ", c.nUnitPrce `lField02`" +
                 " FROM Inv_Transfer_Master a" +
