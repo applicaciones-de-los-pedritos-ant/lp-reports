@@ -346,7 +346,7 @@ public class DailyProduction implements GReport{
                             ", c.sBarCodex `sField02`" +
                             ", c.sDescript `sField03`" +
                             ", IFNULL(d.`sMeasurNm`, '') `sField04`" +
-                            ", IFNULL(e.`sDescript`, '') `sField05`" +
+                            ", IFNULL(e.`sDescript`, '') `sField06`" +
                             ", b.nQuantity `nField01`" + 
                             ", c.nUnitPrce `lField01`" +
                             ", a.sTransNox `sField05`" +
@@ -373,6 +373,7 @@ public class DailyProduction implements GReport{
                             ", c.sBarCodex `sField02`" +
                             ", c.sDescript `sField03`" +
                             ", IFNULL(d.`sMeasurNm`, '') `sField04`" +
+                            ", IFNULL(e.`sDescript`, '') `sField05`" +
                             ", SUM(b.nQuantity) `nField01`" + 
                             ", c.nUnitPrce `lField01`" +
                         " FROM Daily_Production_Master a" +
@@ -381,6 +382,8 @@ public class DailyProduction implements GReport{
                                 " ON b.sStockIDx = c.sStockIDx" +
                             " LEFT JOIN Measure d" +
                                 " ON c.sMeasurID = d.sMeasurID" + 
+                            " LEFT JOIN Brand e" + 
+                                " ON c.sBrandCde = e.sBrandCde" +
                         " WHERE a.sTransNox = b.sTransNox" +
                         " GROUP BY c.sBarCodex";
         
