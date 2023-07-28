@@ -316,7 +316,7 @@ public class InvWaste implements GReport{
                     ", b.nInvCostx `lField01`" +
                     ", a.sTransNox `sField03`" +
                     ", IFNULL(e.sDescript, '') `sField04`" +
-                    ", DATE_FORMAT(a.dTransact, '%M %d, %Y') `sField04`" +
+                    ", DATE_FORMAT(a.dTransact, '%M %d, %Y') `sField05`" +
                 " FROM Inv_Waste_Master a" +
                     ", Inv_Waste_Detail b" +
                         " LEFT JOIN Inventory c" +

@@ -342,7 +342,8 @@ public class Purchases implements GReport{
                         ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`" +
                         ", g.sClientNm `sField03`" +	
                         ", c.sBarCodex `sField04`" +
-                        ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript)), IF(IFNULL(e.sDescript, '') = '', '', CONCAT(' / ', e.sDescript))) `sField05`" +
+                        ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))) `sField05`" +
+                        ", IFNULL(e.`sDescript`, '') `sField07`" +
                         ", IFNULL(f.sMeasurNm, '') `sField06`" +
                         ", b.nQuantity `nField01`" +
                         ", b.nUnitPrce `lField01`" +
@@ -393,7 +394,6 @@ public class Purchases implements GReport{
                         " AND a.cTranStat <> '3'";
         }
         
-        return lsSQL;
     }
     
     private String getReportSQLSum(){
