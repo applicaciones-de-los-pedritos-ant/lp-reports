@@ -40,6 +40,7 @@ import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.agentfx.CommonUtils;
+import org.rmj.appdriver.constants.RecordStatus;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
@@ -285,7 +286,8 @@ public class Inventory implements GReport{
                                 " LEFT JOIN Measure f" +
                                     " ON b.sMeasurID = f.sMeasurID" +
                         " WHERE a.sStockIDx = b.sStockIDx" +
-                            " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                            " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()) +
+                 " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE);
         
         if (!System.getProperty("store.report.criteria.type").isEmpty()){
             lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
