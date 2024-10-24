@@ -387,12 +387,19 @@ public class PurchaseReceiving implements GReport{
                         ", IFNULL(c.sInvTypCd, '') `sField07`" +
                         ", b.nQuantity `nField01`" +
                         ", b.nUnitPrce `lField01`" +
-                    " FROM PO_Master a" +
+                        ", CASE a.cTranStat" +
+                                 " WHEN '0' THEN 'OPEN'" +
+                                 " WHEN '1' THEN 'APPROVED'" +
+                                 " WHEN '2' THEN 'PAID'" +
+                                 " WHEN '3' THEN 'CANCELLED'" +
+                                 " WHEN '4' THEN 'VOID'" +
+                            " END `sField09`" +
+                    " FROM PO_Receiving_Master a" +
                         " LEFT JOIN Client_Master g" + 
                             " ON a.sSupplier = g.sClientID" + 
                         " LEFT JOIN Branch h" +
                             " ON a.sBranchCd = h.sBranchCd" +
-                        ", PO_Detail b" +
+                        ", PO_Receiving_Detail b" +
                             " LEFT JOIN Inventory c" +
                                 " ON b.sStockIDx = c.sStockIDx" +
                             " LEFT JOIN Model d" +
@@ -415,12 +422,19 @@ public class PurchaseReceiving implements GReport{
                     ", IFNULL(e.sDescript, '') `sField08`" +
                     ", b.nQuantity `nField01`" +
                     ", 0.00 `lField01`" +
-                " FROM PO_Master a" +
+                     ", CASE a.cTranStat" +
+                                 " WHEN '0' THEN 'OPEN'" +
+                                 " WHEN '1' THEN 'APPROVED'" +
+                                 " WHEN '2' THEN 'PAID'" +
+                                 " WHEN '3' THEN 'CANCELLED'" +
+                                 " WHEN '4' THEN 'VOID'" +
+                            " END `sField09`" +
+                " FROM PO_Receiving_Master a" +
                     " LEFT JOIN Client_Master g" + 
                         " ON a.sSupplier = g.sClientID" + 
                     " LEFT JOIN Branch h" +
                         " ON a.sBranchCd = h.sBranchCd" +
-                    ", PO_Detail b" +
+                    ", PO_Receiving_Detail b" +
                         " LEFT JOIN Inventory c" +
                             " ON b.sStockIDx = c.sStockIDx" +
                         " LEFT JOIN Model d" +
