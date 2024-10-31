@@ -227,11 +227,13 @@ public class InvTransfer implements GReport{
         System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
         lsSQL = MiscUtil.addCondition(getReportSQLSummary(), lsCondition);
         ResultSet rs = _instance.executeQuery(lsSQL);
+        System.out.println (lsSQL);
          while (!rs.next()) {
             
             _message = "No record found...";
             return false;
         }
+         rs.beforeFirst();
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         
@@ -276,6 +278,7 @@ public class InvTransfer implements GReport{
             _message = "No record found...";
             return false;
         }
+         rs.beforeFirst();
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         
@@ -335,6 +338,13 @@ public class InvTransfer implements GReport{
                     ", IFNULL(e.sDescript, '') `sField08`" +
                     ", b.nQuantity `lField01`" +
                     ", c.nUnitPrce `lField02`" +
+                    ", CASE a.cTranStat" +
+                    " WHEN '0' THEN 'OPEN'" +
+                    " WHEN '1' THEN 'CONFIRMED'" +
+                    " WHEN '2' THEN 'RECIEVED'" +
+                    " WHEN '3' THEN 'CANCELLED'" +
+                    " WHEN '4' THEN 'VOID'" +
+                    " END `sField09`" +
                 " FROM Inv_Transfer_Master a" +
                         " LEFT JOIN Branch g" +
                             " ON a.sDestinat = g.sBranchCd" +
@@ -347,7 +357,9 @@ public class InvTransfer implements GReport{
                             " ON c.sMeasurID = f.sMeasurID" + 
                         " LEFT JOIN Inv_Type h" +
                             " ON c.sInvTypCd = h.sInvTypCd" +
-                " WHERE a.sTransNox = b.sTransNox";
+                " WHERE a.sTransNox = b.sTransNox" + 
+                " AND a.cTranStat NOT IN('0','3')" +
+                " ORDER BY a.sDestinat, a.sTransNox, b.nEntryNox";
         
         if (_instance.getUserLevel() >= UserRight.ENGINEER){
             if (!System.getProperty("store.report.criteria.branch").isEmpty()){
@@ -384,8 +396,10 @@ public class InvTransfer implements GReport{
                             " LEFT JOIN Branch e ON a.sBranchCd = e.sBranchCd" +
                             ", Inv_Transfer_Detail b" +
                             " LEFT JOIN Inventory c ON b.sStockIDx = c.sStockIDx" +
-                        " WHERE a.sTransNox = b.sTransNox" +                    
-                        " GROUP BY a.sTransNox";
+                        " WHERE a.sTransNox = b.sTransNox" +    
+                        " AND a.cTranStat NOT IN('0','3')" +
+                        " GROUP BY a.sTransNox" +
+                        " ORDER BY a.sDestinat, a.sTransNox";
         
         if (_instance.getUserLevel() >= UserRight.ENGINEER){
             if (!System.getProperty("store.report.criteria.branch").isEmpty()){
@@ -398,7 +412,7 @@ public class InvTransfer implements GReport{
         if (!System.getProperty("store.report.criteria.destinat").isEmpty()){
             lsSQL = MiscUtil.addCondition(lsSQL, "a.sDestinat = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.destinat")));
         }
-        
+//        System.out.println (lsSQL);
         return lsSQL;
     }
 }
