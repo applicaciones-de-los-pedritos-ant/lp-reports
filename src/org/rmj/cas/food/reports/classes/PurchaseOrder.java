@@ -114,7 +114,7 @@ public class PurchaseOrder implements GReport{
             stage.setScene(scene);
             stage.showAndWait();
         } catch (IOException e) {
-            ShowMessageFX.Error(e.getMessage(), DailyProduction.class.getSimpleName(), "Please inform MIS Department.");
+            ShowMessageFX.Error(e.getMessage(), PurchaseOrder.class.getSimpleName(), "Please inform MIS Department.");
             System.exit(1);
         }
         
@@ -261,7 +261,7 @@ public class PurchaseOrder implements GReport{
                                                         params, 
                                                         jrRS);
         } catch (JRException | SQLException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PurchaseOrder.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         return true;
