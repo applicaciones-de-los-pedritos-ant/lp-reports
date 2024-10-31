@@ -328,6 +328,7 @@ public class InvTransfer implements GReport{
     
     private String getReportSQL(){
         String lsSQL = "SELECT" +
+                    "  h.sBranchNm `sField10`" +
                     "  g.sBranchNm `sField01`" +
                     ", a.sTransNox `sField02`" +
                     ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`" +
@@ -346,6 +347,8 @@ public class InvTransfer implements GReport{
                     " WHEN '4' THEN 'VOID'" +
                     " END `sField09`" +
                 " FROM Inv_Transfer_Master a" +
+                        " LEFT JOIN Branch h" +
+                            " ON LEFT(a.sTransNox, 4) = h.sBranchCd" +
                         " LEFT JOIN Branch g" +
                             " ON a.sDestinat = g.sBranchCd" +
                     ", Inv_Transfer_Detail b" +
@@ -399,7 +402,7 @@ public class InvTransfer implements GReport{
                         " WHERE a.sTransNox = b.sTransNox" +    
                         " AND a.cTranStat NOT IN('0','3')" +
                         " GROUP BY a.sTransNox" +
-                        " ORDER BY a.sDestinat, a.sTransNox";
+                        " ORDER BY a.sDestinat, a.sTransNox, b.nEntryNox";
         
         if (_instance.getUserLevel() >= UserRight.ENGINEER){
             if (!System.getProperty("store.report.criteria.branch").isEmpty()){
