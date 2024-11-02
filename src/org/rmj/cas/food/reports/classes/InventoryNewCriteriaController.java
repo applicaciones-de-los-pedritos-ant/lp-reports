@@ -85,7 +85,7 @@ public class InventoryNewCriteriaController implements Initializable {
         return psBranch;
     }
 
-    public String InvType() {
+    public String getInvType() {
         return psInvTypCd;
     }
 
@@ -98,10 +98,12 @@ public class InventoryNewCriteriaController implements Initializable {
         txtField01.setOnKeyPressed(this::txtField_KeyPressed);
         txtField02.setOnKeyPressed(this::txtField_KeyPressed);
         txtField03.setOnKeyPressed(this::txtField_KeyPressed);
+        txtField04.setOnKeyPressed(this::txtField_KeyPressed);
 
         txtField01.focusedProperty().addListener(txtField_Focus);
         txtField02.focusedProperty().addListener(txtField_Focus);
         txtField03.focusedProperty().addListener(txtField_Focus);
+        txtField04.focusedProperty().addListener(txtField_Focus);
 
         txtField02.setDisable(pbSingleDate);
         if (!oApp.isMainOffice() && !oApp.isWarehouse()
