@@ -247,7 +247,7 @@ public class Inventory implements GReport {
         rs.beforeFirst();
         while (rs.next()) {
             if (System.getProperty("store.report.criteria.branch").equals("") && _instance.isOnline()) {
-                NeoRecalculate(rs.getString("sStockIDx"));
+                NeoRecalculate(rs.getString("sField00"));
             } else {
                 break;
             }
