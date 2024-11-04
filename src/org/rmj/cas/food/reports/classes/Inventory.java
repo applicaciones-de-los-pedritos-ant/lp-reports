@@ -400,7 +400,7 @@ public class Inventory implements GReport {
 
         _instance.beginTrans();
         while (loRS.next()) {
-            if (!Recalculate(loRS.getString("sField00"), loRS.getDouble("lField02"))) {
+            if (!Recalculate(loRS.getString("sStockIDx"), loRS.getDouble("nBegQtyxx"))) {
                 lnRow += 1;
             }
 
