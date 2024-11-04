@@ -1,15 +1,12 @@
 /**
- * Food Reports Main Class
- * @author Michael T. Cuison
- * @started 2018.11.24
+ * Inventory Reports Main Class New
+ *
+ * @author Maynard Valencia
+ * @started 2024.11.02
  */
-
 package org.rmj.cas.food.reports.classes;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -29,33 +26,30 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.data.JsonDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.rmj.appdriver.GLogger;
 import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
-import org.rmj.appdriver.agentfx.CommonUtils;
 import org.rmj.appdriver.constants.RecordStatus;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
-public class Inventory implements GReport{
+public class Inventory implements GReport {
+
     private GRider _instance;
     private boolean _preview = true;
     private String _message = "";
     private LinkedList _rptparam = null;
     private JasperPrint _jrprint = null;
     private LogWrapper logwrapr = new LogWrapper("org.rmj.foodreports.classes.Inventory", "InventoryReport.log");
-    
-    private double xOffset = 0; 
+
+    private double xOffset = 0;
     private double yOffset = 0;
-    
-    public Inventory(){
+
+    public Inventory() {
         _rptparam = new LinkedList();
         _rptparam.add("store.report.id");
         _rptparam.add("store.report.no");
@@ -64,19 +58,19 @@ public class Inventory implements GReport{
         _rptparam.add("store.report.class");
         _rptparam.add("store.report.is_save");
         _rptparam.add("store.report.is_log");
-        
+
         _rptparam.add("store.report.criteria.presentation");
-        _rptparam.add("store.report.criteria.branch");      
-        _rptparam.add("store.report.criteria.group");        
-        _rptparam.add("store.report.criteria.date");
-        _rptparam.add("store.report.criteria.type");
+        _rptparam.add("store.report.criteria.branch");
+        _rptparam.add("store.report.criteria.group");
+        _rptparam.add("store.report.criteria.datefrom");
+        _rptparam.add("store.report.criteria.datethru");
     }
-    
+
     @Override
     public void setGRider(Object foApp) {
         _instance = (GRider) foApp;
     }
-    
+
     @Override
     public void hasPreview(boolean show) {
         _preview = show;
@@ -84,15 +78,15 @@ public class Inventory implements GReport{
 
     @Override
     public boolean getParam() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("InventoryCriteria.fxml"));
-        fxmlLoader.setLocation(getClass().getResource("InventoryCriteria.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("InventoryNewCriteria.fxml"));
+        fxmlLoader.setLocation(getClass().getResource("InventoryNewCriteria.fxml"));
 
-        InventoryCriteriaController instance = new InventoryCriteriaController();
-        instance.isDetailedOnly(true);
+        InventoryNewCriteriaController instance = new InventoryNewCriteriaController();
+        instance.singleDayOnly(false);
         instance.setGRider(_instance);
-        
+
         try {
-            
+
             fxmlLoader.setController(instance);
             Parent parent = fxmlLoader.load();
             Stage stage = new Stage();
@@ -121,219 +115,250 @@ public class Inventory implements GReport{
             stage.setScene(scene);
             stage.showAndWait();
         } catch (IOException e) {
-            ShowMessageFX.Error(e.getMessage(), DailyProduction.class.getSimpleName(), "Please inform MIS Department.");
+            ShowMessageFX.Error(e.getMessage(), Inventory.class.getSimpleName(), "Please inform MIS Department.");
             System.exit(1);
         }
-        
-        if (!instance.isCancelled()){
+
+        if (!instance.isCancelled()) {
             System.setProperty("store.default.debug", "true");
-            System.setProperty("store.report.criteria.presentation", instance.Presentation());
-            System.setProperty("store.report.criteria.group", instance.GroupBy());
-            System.setProperty("store.report.criteria.type", instance.InvType());
-            System.setProperty("store.report.criteria.branch", "");
-            System.setProperty("store.report.criteria.date", "");
+            System.setProperty("store.report.criteria.datefrom", instance.getDateFrom());
+            System.setProperty("store.report.criteria.datethru", instance.getDateTo());
+            System.setProperty("store.report.criteria.branch", instance.getBranch());
+            System.setProperty("store.report.criteria.group", "");
+            System.setProperty("store.report.criteria.type", instance.getInvType());
             return true;
         }
         return false;
     }
-    
+
     @Override
     public boolean processReport() {
         boolean bResult = false;
-        
+
         //Get the criteria as extracted from getParam()
-        if(System.getProperty("store.report.criteria.presentation").equals("0")){
-            System.setProperty("store.report.no", "1");
-        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
-            System.setProperty("store.report.no", "3");
-        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
-            System.setProperty("store.report.no", "4");
-        }else{
-            System.setProperty("store.report.no", "2");
-        }
-        
+//        if(System.getProperty("store.report.criteria.presentation").equals("0")){
+//            System.setProperty("store.report.no", "1");
+//        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
+//            System.setProperty("store.report.no", "3");
+//        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
+//            System.setProperty("store.report.no", "4");
+//        }else{
+//            System.setProperty("store.report.no", "2");
+//        }
+        System.setProperty("store.report.no", "2");
+
         //Load the jasper report to be use by this object
-        String lsSQL = "SELECT sFileName, sReportHd" + 
-                      " FROM xxxReportDetail" + 
-                      " WHERE sReportID = " + SQLUtil.toSQL(System.getProperty("store.report.id")) +
-                        " AND nEntryNox = " + SQLUtil.toSQL(System.getProperty("store.report.no"));
-        
+        String lsSQL = "SELECT sFileName, sReportHd"
+                + " FROM xxxReportDetail"
+                + " WHERE sReportID = " + SQLUtil.toSQL(System.getProperty("store.report.id"))
+                + " AND nEntryNox = " + SQLUtil.toSQL(System.getProperty("store.report.no"));
+
         //Check if in debug mode...
-        if(System.getProperty("store.default.debug").equalsIgnoreCase("true")){
+        if (System.getProperty("store.default.debug").equalsIgnoreCase("true")) {
             System.out.println(System.getProperty("store.report.class") + ".processReport: " + lsSQL);
         }
-        
+
         ResultSet loRS = _instance.executeQuery(lsSQL);
-        
+
         try {
-            if(!loRS.next()){
+            if (!loRS.next()) {
                 _message = "Invalid report was detected...";
                 closeReport();
                 return false;
             }
             System.setProperty("store.report.file", loRS.getString("sFileName"));
             System.setProperty("store.report.header", loRS.getString("sReportHd"));
-            
-            switch(Integer.valueOf(System.getProperty("store.report.no"))){
-                case 1:
-                    bResult = printSummary();
-                    break;
-                case 2: 
+
+            switch (Integer.valueOf(System.getProperty("store.report.no"))) {
+//                case 1:
+//                    bResult = printSummary();
+//                    break;
+                case 2:
                     bResult = printDetail();
-                    break;
             }
-            
-            if(bResult){
-                if(System.getProperty("store.report.is_log").equalsIgnoreCase("true")){
-                    logReport();
-                }
-                JasperViewer jv = new JasperViewer(_jrprint, false);     
-                jv.setVisible(true);    
-                jv.setAlwaysOnTop(true);            
+
+            if (!bResult) {
+                closeReport();
+                return false;
             }
-            
+            if (System.getProperty("store.report.is_log").equalsIgnoreCase("true")) {
+                logReport();
+            }
+            JasperViewer jv = new JasperViewer(_jrprint, false);
+            jv.setVisible(true);
+            jv.setAlwaysOnTop(bResult);
+
         } catch (SQLException ex) {
             _message = ex.getMessage();
             //Check if in debug mode...
-            if(System.getProperty("store.default.debug").equalsIgnoreCase("true")){
+            if (System.getProperty("store.default.debug").equalsIgnoreCase("true")) {
                 ex.printStackTrace();
-            }            
+            }
             GLogger.severe(System.getProperty("store.report.class"), "processReport", ExceptionUtils.getStackTrace(ex));
-            
+
             closeReport();
             return false;
         }
-        
+
         closeReport();
         return true;
     }
 
     @Override
     public void list() {
-        _rptparam.forEach(item->System.out.println(item));
+        _rptparam.forEach(item -> System.out.println(item));
     }
-    
-    private boolean printSummary(){
+
+    private boolean printSummary() throws SQLException {
         System.out.println("Printing Summary");
         return true;
     }
-    
-    private boolean printDetail(){
+
+    private boolean printDetail() throws SQLException {
+        String lsCondition = "";
+        String lsDate = "";
+
+        if (!System.getProperty("store.report.criteria.datefrom").equals("")
+                && !System.getProperty("store.report.criteria.datethru").equals("")) {
+
+            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+
+            lsCondition = "e.dTransact BETWEEN " + lsDate;
+        } else {
+            lsCondition = "0=1";
+        }
+
+        if (!System.getProperty("store.report.criteria.branch").equals("")) {
+            lsCondition = " a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
+        } else {
+            lsCondition = " a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+        }
+        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        while (!rs.next()) {
+
+            _message = "No record found...";
+            return false;
+        }
+        rs.beforeFirst();
+        //Convert the data-source to JasperReport data-source
+        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+        //Create the parameter
+        Map<String, Object> params = new HashMap<>();
+        params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");
+        params.put("sBranchNm", _instance.getBranchName());
+        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());
+        params.put("sReportNm", System.getProperty("store.report.header"));
+        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+
+        String lsSQL = "SELECT sClientNm FROM Client_Master"
+                + " WHERE sClientID IN ("
+                + "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+        ResultSet loRS = _instance.executeQuery(lsSQL);
+
+        if (loRS.next()) {
+            params.put("sPrintdBy", loRS.getString("sClientNm"));
+        } else {
+            params.put("sPrintdBy", "");
+        }
+
         try {
-            ResultSet rs = _instance.executeQuery(getReportSQL());
-
-            JSONArray json_mcsales = new JSONArray();
-            json_mcsales.clear();
-            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");  
-            params.put("sBranchNm", _instance.getBranchName());
-            params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());      
-            params.put("sReportNm", System.getProperty("store.report.header"));
-
-            String lsSQL = "SELECT sClientNm FROM Client_Master" +
-                            " WHERE sClientID IN (" +
-                            "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
-
-            ResultSet loRS = _instance.executeQuery(lsSQL);
-
-            if (loRS.next()){
-                params.put("sPrintdBy", loRS.getString("sClientNm"));
-            } else {
-                params.put("sPrintdBy", "");
-            }
-        
-            _jrprint = JasperFillManager.fillReport(_instance.getReportPath() + 
-                                                    System.getProperty("store.report.file"),
-                                                    params, 
-                                                    jrRS);
-        } catch (JRException | SQLException ex) {
+            _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
+                    + System.getProperty("store.report.file"),
+                    params,
+                    jrRS);
+        } catch (JRException ex) {
             Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return true;
     }
-    
-    private void closeReport(){
-        _rptparam.forEach(item->System.clearProperty((String) item));
+
+    private void closeReport() {
+        _rptparam.forEach(item -> System.clearProperty((String) item));
         System.clearProperty("store.report.file");
         System.clearProperty("store.report.header");
     }
-    
-    private void logReport(){
-        _rptparam.forEach(item->System.clearProperty((String) item));
+
+    private void logReport() {
+        _rptparam.forEach(item -> System.clearProperty((String) item));
         System.clearProperty("store.report.file");
         System.clearProperty("store.report.header");
     }
-    
-    private String getReportSQL(){
-        String lsSQL = "SELECT" +
-                            "  IFNULL(c.sDescript, '') `sField01`" +
-                            ", b.sBarCodex `sField02`" +
-                            ", IFNULL(b.`sDescript`, '') `sField03`" +
-                            ", IFNULL(d.`sDescript`, '') `sField05`" +
-                            ", IFNULL(f.sMeasurNm, '') `sField04`" +
-                            ", a.nQtyOnHnd `lField01`" +
-                            ", b.nUnitPrce `lField02`" +
-                            ", b.nSelPrice `lField03`" +
-                        " FROM Inv_Master a" +
-                            " , Inventory b" +
-                                " LEFT JOIN Inv_Type c" +
-                                    " ON b.sInvTypCd = c.sInvTypCd" +
-                                " LEFT JOIN Brand d" +
-                                    " ON b.sBrandCde = d.sBrandCde" +
-                                " LEFT JOIN Measure f" +
-                                    " ON b.sMeasurID = f.sMeasurID" +
-                        " WHERE a.sStockIDx = b.sStockIDx" +
-                            " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                 " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE);
-        
+
+    private String getReportSQL() {
+        String lsSQL = "SELECT"
+                + "  IFNULL(c.sDescript, '') `sField01`"
+                + ", b.sBarCodex `sField02`"
+                + ", IFNULL(b.`sDescript`, '') `sField03`"
+                + ", IFNULL(d.`sDescript`, '') `sField05`"
+                + ", IFNULL(f.sMeasurNm, '') `sField04`"
+                + ", a.nQtyOnHnd `lField01`"
+                + ", a.nBegQtyxx `lField02`"
+                + ", SUM(IFNULL(e.nQtyInxxx, '0')) `lField03`"
+                + ", SUM(IFNULL(e.nQtyOutxx, '0')) `lField04`"
+                + " FROM Inv_Master a"
+                + " , Inventory b"
+                + " LEFT JOIN Inv_Type c"
+                + " ON b.sInvTypCd = c.sInvTypCd"
+                + " LEFT JOIN Brand d"
+                + " ON b.sBrandCde = d.sBrandCde"
+                + " LEFT JOIN Measure f"
+                + " ON b.sMeasurID = f.sMeasurID"
+                + " LEFT JOIN Inv_Ledger e"
+                + " ON b.sStockIDx = e.sStockIDx"
+                + " WHERE a.sStockIDx = b.sStockIDx"
+                + " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
+                + " GROUP BY b.sStockIDx ";
+
         if (!System.getProperty("store.report.criteria.type").isEmpty()){
             lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
         }
         
         return lsSQL;
     }
-    
-    private String getReportSQLDate(){
+
+    private String getReportSQLDate() {
         String lsDate = System.getProperty("store.report.date.criteria");
-        
-        return "SELECT * FROM" +
-                    " (SELECT" +
-                        "  b.sBarCodex `sField01`" +
-                        ", b.sDescript `sField02`" +
-                        ", a.nBinNumbr `sField03`" +
-                        ", a.nQtyOnHnd `nField01`" +
-                        ", b.nSelPrice `lField01`" +
-                        ", IFNULL(c.sDescript, '') `sField04`" +
-                        ", IFNULL(d.sDescript, '') `sField05`" +
-                        ", IFNULL(e.sDescript, '') `sField06`" +
-                        ", IFNULL(f.sMeasurNm, '') `sField07`" +
-                        ", g.nQtyOnHnd `nField02`" +
-                        ", a.sStockIDx" +
-                    " FROM Inv_Master a" +
-                        " LEFT JOIN Inv_Ledger g" +
-                            " ON a.sStockIDx = g.sStockIDx" +
-                            " AND a.sBranchCd = g.sBranchCd" +
-                            " AND g.dTransact <= " + SQLUtil.toSQL(lsDate) +
-                        ", Inventory b" +
-                            " LEFT JOIN Inv_Type c" +
-                                " ON b.sInvTypCd = c.sInvTypCd" +
-                            " LEFT JOIN Brand d" +
-                                " ON b.sBrandCde = d.sBrandCde" +
-                            " LEFT JOIN Model e" +
-                                " ON b.sModelCde = e.sModelCde" +
-                            " LEFT JOIN Measure f" +
-                                " ON b.sMeasurID = f.sMeasurID" +
-                    " WHERE a.sStockIDx = b.sStockIDx" +
-                        " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                        " AND a.dBegInvxx <= " + SQLUtil.toSQL(lsDate) +
-                    " ORDER BY" +
-                        " g.nLedgerNo DESC) xSourceTable" +
-                " GROUP BY" +
-                    "  sStockIDx" +
-                " ORDER BY" +
-                    "  sField04";
+
+        return "SELECT * FROM"
+                + " (SELECT"
+                + "  b.sBarCodex `sField01`"
+                + ", b.sDescript `sField02`"
+                + ", a.nBinNumbr `sField03`"
+                + ", a.nQtyOnHnd `nField01`"
+                + ", b.nSelPrice `lField01`"
+                + ", IFNULL(c.sDescript, '') `sField04`"
+                + ", IFNULL(d.sDescript, '') `sField05`"
+                + ", IFNULL(e.sDescript, '') `sField06`"
+                + ", IFNULL(f.sMeasurNm, '') `sField07`"
+                + ", g.nQtyOnHnd `nField02`"
+                + ", a.sStockIDx"
+                + " FROM Inv_Master a"
+                + " LEFT JOIN Inv_Ledger g"
+                + " ON a.sStockIDx = g.sStockIDx"
+                + " AND a.sBranchCd = g.sBranchCd"
+                + " AND g.dTransact <= " + SQLUtil.toSQL(lsDate)
+                + ", Inventory b"
+                + " LEFT JOIN Inv_Type c"
+                + " ON b.sInvTypCd = c.sInvTypCd"
+                + " LEFT JOIN Brand d"
+                + " ON b.sBrandCde = d.sBrandCde"
+                + " LEFT JOIN Model e"
+                + " ON b.sModelCde = e.sModelCde"
+                + " LEFT JOIN Measure f"
+                + " ON b.sMeasurID = f.sMeasurID"
+                + " WHERE a.sStockIDx = b.sStockIDx"
+                + " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode())
+                + " AND a.dBegInvxx <= " + SQLUtil.toSQL(lsDate)
+                + " ORDER BY"
+                + " g.nLedgerNo DESC) xSourceTable"
+                + " GROUP BY"
+                + "  sStockIDx"
+                + " ORDER BY"
+                + "  sField04";
     }
 }
