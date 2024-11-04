@@ -9,6 +9,7 @@ package org.rmj.cas.food.reports.classes;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
 import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
+import org.rmj.appdriver.constants.EditMode;
 import org.rmj.appdriver.constants.RecordStatus;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
@@ -241,6 +243,16 @@ public class Inventory implements GReport {
             _message = "No record found...";
             return false;
         }
+        //recalculate data
+        rs.beforeFirst();
+        while (rs.next()) {
+            if (System.getProperty("store.report.criteria.branch").equals("") && _instance.isOnline()) {
+                NeoRecalculate(rs.getString("sField00"));
+            } else {
+                break;
+            }
+        }
+
         rs.beforeFirst();
         //Convert the data-source to JasperReport data-source
         JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
@@ -291,6 +303,7 @@ public class Inventory implements GReport {
 
     private String getReportSQL() {
         String lsSQL = "SELECT"
+                + "  IFNULL(b.sStockIDx, '') `sField00`"
                 + "  IFNULL(c.sDescript, '') `sField01`"
                 + ", b.sBarCodex `sField02`"
                 + ", IFNULL(b.`sDescript`, '') `sField03`"
@@ -314,10 +327,10 @@ public class Inventory implements GReport {
                 + " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
                 + " GROUP BY b.sStockIDx ";
 
-        if (!System.getProperty("store.report.criteria.type").isEmpty()){
+        if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
         }
-        
+
         return lsSQL;
     }
 
@@ -360,5 +373,113 @@ public class Inventory implements GReport {
                 + "  sStockIDx"
                 + " ORDER BY"
                 + "  sField04";
+    }
+
+    public boolean NeoRecalculate(String fsStockIDx) throws SQLException {
+        if (fsStockIDx == null) {
+            return false;
+        }
+
+        String lsSQL = "SELECT a.sStockIDx,a.nBegQtyxx"
+                + " FROM Inv_Master a"
+                + ", Inventory b"
+                + " WHERE a.sStockIDx = b.sStockIDx"
+                + " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode())
+                + " AND a.cRecdStat = '1'"
+                + " AND b.cRecdStat = '1'";
+
+        ResultSet loRS = _instance.executeQuery(lsSQL);
+
+        int lnMax = (int) MiscUtil.RecordCount(loRS);
+        if (lnMax <= 0) {
+            return false;
+        }
+
+        loRS.beforeFirst();
+        int lnRow = 1;
+
+        _instance.beginTrans();
+        while (loRS.next()) {
+            if (!Recalculate(loRS.getString("sStockIDx"), loRS.getDouble("nBegQtyxx"))) {
+                lnRow += 1;
+            }
+
+            System.out.println(lnRow);
+        }
+
+        _instance.commitTrans();
+
+        return true;
+    }
+
+    public boolean Recalculate(String fsStockIDx, double fnBegQtyxx) throws SQLException {
+
+        String lsSQL;
+        ResultSet loRSLedger;
+        ResultSet loRSInvMaster;
+
+        int lnLedgerNo = 0;
+        lsSQL = "SELECT *"
+                + " FROM Inv_Ledger"
+                + " WHERE sStockIDx = " + SQLUtil.toSQL(fsStockIDx)
+                + " AND sBranchCD = " + SQLUtil.toSQL(_instance.getBranchCode())
+                + " ORDER BY dTransact, nLedgerNo";
+        loRSLedger = _instance.executeQuery(lsSQL);
+
+        double lnQtyOnHnd = fnBegQtyxx;
+
+        while (loRSLedger.next()) {
+
+            lnQtyOnHnd += (loRSLedger.getFloat("nQtyInxxx") - loRSLedger.getFloat("nQtyOutxx"));
+            lnLedgerNo++;
+        }
+
+        StringBuilder loSQL = new StringBuilder();
+        if (lnLedgerNo != loRSLedger.getInt("nLedgerNo")) {
+            loSQL.append(", ").append("nLedgerNo = ").append(lnLedgerNo);
+        }
+
+        if (Double.compare(loRSLedger.getDouble("nQtyOnHnd"), lnQtyOnHnd) != 0) {
+            loSQL.append(", ").append("nQtyOnHnd = ").append(lnQtyOnHnd);
+        }
+
+        if (loSQL.length() > 0) {
+            lsSQL = "UPDATE Inv_Ledger"
+                    + " SET " + loSQL.toString().substring(2)
+                    + " WHERE sStockIDx = " + SQLUtil.toSQL(fsStockIDx)
+                    + " AND sBranchCD = " + SQLUtil.toSQL(_instance.getBranchCode())
+                    + " AND sSourceCd = " + SQLUtil.toSQL(loRSLedger.getString("sSourceCd"))
+                    + " AND sSourceNo = " + SQLUtil.toSQL(loRSLedger.getString("sSourceNo"));
+            System.out.println(lsSQL);
+            _instance.executeQuery(lsSQL, "Inv_Ledger", _instance.getBranchCode(), "");
+        }
+
+        loSQL = new StringBuilder();
+        lsSQL = "SELECT *"
+                + " FROM Inv_Master"
+                + " WHERE sStockIDx = " + SQLUtil.toSQL(fsStockIDx)
+                + " AND sBranchCD = " + SQLUtil.toSQL(_instance.getBranchCode());
+
+        loRSInvMaster = _instance.executeQuery(lsSQL);
+        if (lnLedgerNo != loRSLedger.getDouble("nLedgerNo")) {
+            loSQL.append(", ").append("nLedgerNo = ").append(lnLedgerNo);
+        }
+
+        if (Double.compare(loRSLedger.getDouble("nQtyOnHnd"), lnQtyOnHnd) != 0) {
+            loSQL.append(", ").append("nQtyOnHnd = ").append(lnQtyOnHnd);
+        }
+
+        if (loSQL.length() > 0) {
+            lsSQL = "UPDATE Inv_Master"
+                    + " SET " + loSQL.toString().substring(2)
+                    + " sModified = " + SQLUtil.toSQL(_instance.getUserID())
+                    + " dModified = " + SQLUtil.toSQL(_instance.getServerDate())
+                    + " WHERE sStockIDx = " + SQLUtil.toSQL(fsStockIDx)
+                    + " AND sBranchCD = " + SQLUtil.toSQL(_instance.getBranchCode());
+            _instance.executeQuery(lsSQL, "Inv_Master", _instance.getBranchCode(), "");
+        }
+
+        return true;
+
     }
 }
