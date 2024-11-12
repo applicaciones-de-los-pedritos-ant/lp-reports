@@ -15,6 +15,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -27,6 +29,7 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.rmj.appdriver.GLogger;
@@ -176,7 +179,7 @@ public class Inventory implements GReport {
 //                    bResult = printSummary();
 //                    break;
                 case 2:
-                    bResult = printDetail();
+                    bResult = printDetails();
             }
 
             if (!bResult) {
@@ -219,9 +222,13 @@ public class Inventory implements GReport {
     private boolean printDetail() throws SQLException {
         String lsCondition = "";
         String lsDate = "";
+        String lsDateFrom = "";
+        String lsDateThru = "";
 
         if (!System.getProperty("store.report.criteria.datefrom").equals("")
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
+            lsDateFrom = System.getProperty("store.report.criteria.datefrom");
+            lsDateThru = System.getProperty("store.report.criteria.datethru");
 
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
@@ -244,18 +251,50 @@ public class Inventory implements GReport {
             return false;
         }
         //recalculate data
+//        rs.beforeFirst();
+//        while (rs.next()) {
+//            if (System.getProperty("store.report.criteria.branch").equals("") && _instance.isOnline()) {
+//                NeoRecalculate(rs.getString("sField00"));
+//            } else {
+//                break;
+//            }
+//        }
+//
+//        rs.beforeFirst();
+//        //Convert the data-source to JasperReport data-source
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+        
+        ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
         rs.beforeFirst();
         while (rs.next()) {
-            if (System.getProperty("store.report.criteria.branch").equals("") && _instance.isOnline()) {
-                NeoRecalculate(rs.getString("sField00"));
-            } else {
-                break;
+            R1data.add(new InventoryModel(
+                    rs.getObject("sField00").toString(),
+                    rs.getObject("sField01").toString(),
+                    rs.getObject("sField02").toString(),
+                    rs.getObject("sField03").toString(),
+                    rs.getObject("sField04").toString(),
+                    rs.getObject("sField05").toString(),
+                    rs.getObject("lField01").toString(),
+                    rs.getObject("lField02").toString(),
+                    rs.getObject("lField03").toString(),
+                    rs.getObject("lField04").toString(),
+                    rs.getObject("lField05").toString()
+            ));
+        }
+        System.out.println("R1data.size = " + R1data.size());
+        for(int lnCtr = 0; lnCtr <= R1data.size()-1; lnCtr++){
+            if(!lsDateFrom.isEmpty()){
+                R1data.get(lnCtr).setlField02(getBegQuantity(R1data.get(lnCtr).getsField00(), lsDateFrom).toString());
+                R1data.get(lnCtr).setlField05(getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString());
             }
         }
 
-        rs.beforeFirst();
-        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+//        rs.beforeFirst();
+//        //Convert the data-source to JasperReport data-source
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -288,6 +327,108 @@ public class Inventory implements GReport {
 
         return true;
     }
+    private boolean printDetails() throws SQLException {
+        String lsCondition = "";
+        String lsDate = "";
+        String lsDateFrom = "";
+        String lsDateThru = "";
+
+        if (!System.getProperty("store.report.criteria.datefrom").equals("")
+                && !System.getProperty("store.report.criteria.datethru").equals("")) {
+            lsDateFrom = System.getProperty("store.report.criteria.datefrom");
+            lsDateThru = System.getProperty("store.report.criteria.datethru");
+            lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+
+            lsCondition +=  "e.dTransact BETWEEN " + lsDate;
+        } else {
+            lsCondition = "0=1";
+        }
+
+        if (!System.getProperty("store.report.criteria.branch").equals("")) {
+            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
+        } else {
+            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+        }
+        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        if(MiscUtil.RecordCount(rs)==0){
+            _message = "No record found...";
+            return false;
+        }
+//        while (!rs.next()) {
+//            _message = "No record found...";
+//            return false;
+//        }
+        //recalculate data
+        
+        ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
+        rs.beforeFirst();
+        while (rs.next()) {
+            R1data.add(new InventoryModel(
+                    rs.getObject("sField00").toString(),
+                    rs.getObject("sField01").toString(),
+                    rs.getObject("sField02").toString(),
+                    rs.getObject("sField03").toString(),
+                    rs.getObject("sField04").toString(),
+                    rs.getObject("sField05").toString(),
+                    rs.getObject("lField01").toString(),
+                    rs.getObject("lField02").toString(),
+                    rs.getObject("lField03").toString(),
+                    rs.getObject("lField04").toString(),
+                    rs.getObject("lField05").toString()
+            ));
+        }
+        System.out.println("R1data.size = " + R1data.size());
+        for(int lnCtr = 0; lnCtr <= R1data.size()-1; lnCtr++){
+            if(!lsDateFrom.isEmpty()){
+                R1data.get(lnCtr).setlField02(getBegQuantity(R1data.get(lnCtr).getsField00(), lsDateFrom).toString());
+                R1data.get(lnCtr).setlField05(getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString());
+            }
+        }
+
+//        rs.beforeFirst();
+//        //Convert the data-source to JasperReport data-source
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+
+        //Create the parameter
+        Map<String, Object> params = new HashMap<>();
+        params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");
+        params.put("sBranchNm", _instance.getBranchName());
+        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());
+        params.put("sReportNm", System.getProperty("store.report.header"));
+        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
+
+        String lsSQL = "SELECT sClientNm FROM Client_Master"
+                + " WHERE sClientID IN ("
+                + "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+        ResultSet loRS = _instance.executeQuery(lsSQL);
+
+        if (loRS.next()) {
+            params.put("sPrintdBy", loRS.getString("sClientNm"));
+        } else {
+            params.put("sPrintdBy", "");
+        }
+
+        try {
+            
+            _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
+                    + System.getProperty("store.report.file"),
+                    params, 
+                    jrRS);
+//            _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
+//                    + System.getProperty("store.report.file"),
+//                    params,
+//                    jrRS);
+        } catch (JRException ex) {
+            Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return true;
+    }
 
     private void closeReport() {
         _rptparam.forEach(item -> System.clearProperty((String) item));
@@ -300,7 +441,55 @@ public class Inventory implements GReport {
         System.clearProperty("store.report.file");
         System.clearProperty("store.report.header");
     }
+    private Object getBegQuantity(String StockIDx, String date) {
+            String lsSQL = "SELECT"
+                    + " nQtyOnHnd "
+                    + " FROM Inv_Ledger "
+                    + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx);
 
+            if (!System.getProperty("store.report.criteria.type").isEmpty()) {
+                lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
+            }
+
+            ResultSet rsBegQty = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact < " + SQLUtil.toSQL(date)) 
+                        + "ORDER BY nLedgerNo DESC LIMIT 1");
+            try {
+                if(!rsBegQty.next()){
+                    return 0.00;
+                }
+                System.out.println(rsBegQty.getObject("nQtyOnHnd"));
+                return rsBegQty.getObject("nQtyOnHnd");
+            } catch (SQLException ex) {
+                Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
+                return 0.00;
+            }
+
+        }
+        private Object getEndInv(String StockIDx, String date) {
+            String lsSQL = "SELECT"
+                    + " nQtyOnHnd "
+                    + " FROM Inv_Ledger "
+                    + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx);
+
+            if (!System.getProperty("store.report.criteria.type").isEmpty()) {
+                lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
+            }
+
+            System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact = " + SQLUtil.toSQL(date)) 
+                        + "ORDER BY nLedgerNo DESC LIMIT 1" + "\n");
+            ResultSet rsEndInv = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date)) 
+                        + "ORDER BY nLedgerNo DESC LIMIT 1");
+            try {
+                if(!rsEndInv.next()){
+                    return 0.00;
+                }
+                System.out.println("rsEndInv == " +rsEndInv.getObject("nQtyOnHnd"));
+                return rsEndInv.getObject("nQtyOnHnd");
+            } catch (SQLException ex) {
+                Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
+                return 0.00;
+            }
+        }
     private String getReportSQL() {
         String lsSQL = "SELECT"
                 + "  IFNULL(b.sStockIDx, '') `sField00`"
@@ -313,6 +502,7 @@ public class Inventory implements GReport {
                 + ", a.nBegQtyxx `lField02`"
                 + ", SUM(IFNULL(e.nQtyInxxx, '0')) `lField03`"
                 + ", SUM(IFNULL(e.nQtyOutxx, '0')) `lField04`"
+                + ", 0 `lField05`"
                 + " FROM Inv_Master a"
                 + " , Inventory b"
                 + " LEFT JOIN Inv_Type c"
