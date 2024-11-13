@@ -251,50 +251,51 @@ public class Inventory implements GReport {
             return false;
         }
         //recalculate data
-//        rs.beforeFirst();
-//        while (rs.next()) {
-//            if (System.getProperty("store.report.criteria.branch").equals("") && _instance.isOnline()) {
-//                NeoRecalculate(rs.getString("sField00"));
-//            } else {
-//                break;
-//            }
-//        }
-//
-//        rs.beforeFirst();
-//        //Convert the data-source to JasperReport data-source
-//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-
-        
-        ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
         rs.beforeFirst();
         while (rs.next()) {
-            R1data.add(new InventoryModel(
-                    rs.getObject("sField00").toString(),
-                    rs.getObject("sField01").toString(),
-                    rs.getObject("sField02").toString(),
-                    rs.getObject("sField03").toString(),
-                    rs.getObject("sField04").toString(),
-                    rs.getObject("sField05").toString(),
-                    rs.getObject("lField01").toString(),
-                    rs.getObject("lField02").toString(),
-                    rs.getObject("lField03").toString(),
-                    rs.getObject("lField04").toString(),
-                    rs.getObject("lField05").toString()
-            ));
-        }
-        System.out.println("R1data.size = " + R1data.size());
-        for(int lnCtr = 0; lnCtr <= R1data.size()-1; lnCtr++){
-            if(!lsDateFrom.isEmpty()){
-                R1data.get(lnCtr).setlField02(getBegQuantity(R1data.get(lnCtr).getsField00(), lsDateFrom).toString());
-                R1data.get(lnCtr).setlField05(getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString());
+            if (System.getProperty("store.report.criteria.branch").equals("") && _instance.isOnline()) {
+                NeoRecalculate(rs.getString("sField00"));
+            } else {
+                break;
             }
         }
 
-//        rs.beforeFirst();
-//        //Convert the data-source to JasperReport data-source
+        rs.beforeFirst();
+        //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
 
-        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+        
+//        ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
+//        rs.beforeFirst();
+//        while (rs.next()) {
+//            R1data.add(new InventoryModel(
+//                    rs.getObject("sField00").toString(),
+//                    rs.getObject("sField01").toString(),
+//                    rs.getObject("sField02").toString(),
+//                    rs.getObject("sField03").toString(),
+//                    rs.getObject("sField04").toString(),
+//                    rs.getObject("sField05").toString(),
+//                    rs.getObject("lField01").toString(),
+//                    rs.getObject("lField02").toString(),
+//                    rs.getObject("lField03").toString(),
+//                    rs.getObject("lField04").toString(),
+//                    rs.getObject("lField05").toString(),
+//                    rs.getObject("lField06").toString()
+//            ));
+//        }
+//        System.out.println("R1data.size = " + R1data.size());
+//        for(int lnCtr = 0; lnCtr <= R1data.size()-1; lnCtr++){
+//            if(!lsDateFrom.isEmpty()){
+//                R1data.get(lnCtr).setlField02(getBegQuantity(R1data.get(lnCtr).getsField00(), lsDateFrom).toString());
+//                R1data.get(lnCtr).setlField05(getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString());
+//            }
+//        }
+
+        rs.beforeFirst();
+        //Convert the data-source to JasperReport data-source
+        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+//        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -376,7 +377,8 @@ public class Inventory implements GReport {
                     rs.getObject("lField02").toString(),
                     rs.getObject("lField03").toString(),
                     rs.getObject("lField04").toString(),
-                    rs.getObject("lField05").toString()
+                    rs.getObject("lField05").toString(),
+                    rs.getObject("sField06").toString()
             ));
         }
         System.out.println("R1data.size = " + R1data.size());
