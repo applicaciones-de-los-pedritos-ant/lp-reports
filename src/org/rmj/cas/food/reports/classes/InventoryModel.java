@@ -9,7 +9,8 @@ public class InventoryModel {
     private SimpleStringProperty sField02;       
     private SimpleStringProperty sField03;     
     private SimpleStringProperty sField04;     
-    private SimpleStringProperty sField05;
+    private SimpleStringProperty sField05;  
+    private SimpleStringProperty sField06;
     private SimpleDoubleProperty lField01;    
     private SimpleDoubleProperty lField02;     
     private SimpleDoubleProperty lField03;
@@ -17,7 +18,7 @@ public class InventoryModel {
     private SimpleDoubleProperty lField05;
     
     InventoryModel(String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08, String index09, String index10, String index11){
+            String index06, String index07, String index08, String index09, String index10, String index11, String index12){
         this.sField00 = new SimpleStringProperty(index01);
         this.sField01 = new SimpleStringProperty(index02);
         this.sField02 = new SimpleStringProperty(index03);
@@ -29,6 +30,7 @@ public class InventoryModel {
         this.lField03 = new SimpleDoubleProperty(Double.parseDouble(index09));
         this.lField04 = new SimpleDoubleProperty(Double.parseDouble(index10));
         this.lField05 = new SimpleDoubleProperty(Double.parseDouble(index11));
+        this.sField06 = new SimpleStringProperty(index12);
     }
     public String getsField00() {
         return sField00.get();
@@ -117,5 +119,11 @@ public class InventoryModel {
     public void setlField05(String lField05) {
         this.lField05.set(Double.parseDouble(lField05));
     }
-    
+      public String getsField06() {
+        return sField06.get();
+    }
+
+    public void setsField06(String sField06) {
+        this.sField06.set(sField06); ;
+    }
 }
