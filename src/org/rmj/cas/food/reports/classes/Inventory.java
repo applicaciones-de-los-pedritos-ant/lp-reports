@@ -347,7 +347,8 @@ public class Inventory implements GReport {
         }
 
         if (!System.getProperty("store.report.criteria.branch").equals("")) {
-            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
+            //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
+            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         } else {
             lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         }
@@ -447,7 +448,8 @@ public class Inventory implements GReport {
             String lsSQL = "SELECT"
                     + " nQtyOnHnd "
                     + " FROM Inv_Ledger "
-                    + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx);
+                    + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx) 
+                    + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
             if (!System.getProperty("store.report.criteria.type").isEmpty()) {
                 lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
@@ -467,20 +469,23 @@ public class Inventory implements GReport {
             }
 
         }
+   
         private Object getEndInv(String StockIDx, String date) {
             String lsSQL = "SELECT"
                     + " nQtyOnHnd "
                     + " FROM Inv_Ledger "
-                    + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx);
-
+                    + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                    + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+            
             if (!System.getProperty("store.report.criteria.type").isEmpty()) {
                 lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
             }
 
-            System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact = " + SQLUtil.toSQL(date)) 
+            System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date)) 
                         + "ORDER BY nLedgerNo DESC LIMIT 1" + "\n");
             ResultSet rsEndInv = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date)) 
                         + "ORDER BY nLedgerNo DESC LIMIT 1");
+            System.out.println(lsSQL);
             try {
                 if(!rsEndInv.next()){
                     return 0.00;
@@ -494,30 +499,28 @@ public class Inventory implements GReport {
         }
     private String getReportSQL() {
         String lsSQL = "SELECT"
-                + "  IFNULL(b.sStockIDx, '') `sField00`"
-                + ", IFNULL(c.sDescript, '') `sField01`"
-                + ", b.sBarCodex `sField02`"
-                + ", IFNULL(b.`sDescript`, '') `sField03`"
-                + ", IFNULL(d.`sDescript`, '') `sField05`"
-                + ", IFNULL(f.sMeasurNm, '') `sField04`"
-                + ", a.nQtyOnHnd `lField01`"
-                + ", a.nBegQtyxx `lField02`"
-                + ", SUM(IFNULL(e.nQtyInxxx, '0')) `lField03`"
-                + ", SUM(IFNULL(e.nQtyOutxx, '0')) `lField04`"
-                + ", 0 `lField05`"
-                + " FROM Inv_Master a"
-                + " , Inventory b"
-                + " LEFT JOIN Inv_Type c"
-                + " ON b.sInvTypCd = c.sInvTypCd"
-                + " LEFT JOIN Brand d"
-                + " ON b.sBrandCde = d.sBrandCde"
-                + " LEFT JOIN Measure f"
-                + " ON b.sMeasurID = f.sMeasurID"
-                + " LEFT JOIN Inv_Ledger e"
-                + " ON b.sStockIDx = e.sStockIDx"
+                            + "  IFNULL(b.sStockIDx, '') `sField00`"
+                            + ", IFNULL(c.sDescript, '') `sField01`"
+                            + ", b.sBarCodex `sField02`"
+                            + ", IFNULL(b.`sDescript`, '') `sField03`"
+                            + ", IFNULL(d.`sDescript`, '') `sField05`"
+                            + ", IFNULL(f.sMeasurNm, '') `sField04`"
+                            + ", a.nQtyOnHnd `lField01`"
+                            + ", a.nBegQtyxx `lField02`"
+                            + ", SUM(IFNULL(e.nQtyInxxx, '0')) `lField03`"
+                            + ", SUM(IFNULL(e.nQtyOutxx, '0')) `lField04`"
+                            + ", 0 `lField05`"
+                            + ", g.sBranchNm `sField06`"
+                        + " FROM Inv_Master a"
+                            + " LEFT JOIN Branch g ON a.sBranchCd = g.sBranchCd"
+                            + " LEFT JOIN Inv_Ledger e ON a.sStockIDx = e.sStockIDx AND a.sBranchCd = e.sBranchCd"
+                        + " , Inventory b"
+                        + " LEFT JOIN Inv_Type c ON b.sInvTypCd = c.sInvTypCd"
+                        + " LEFT JOIN Brand d ON b.sBrandCde = d.sBrandCde"
+                        + " LEFT JOIN Measure f ON b.sMeasurID = f.sMeasurID"
                 + " WHERE a.sStockIDx = b.sStockIDx"
                 + " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
-                + " GROUP BY b.sStockIDx ";
+                + " GROUP BY  a.sBranchCd, b.sStockIDx ";
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
