@@ -6,6 +6,7 @@
  */
 package org.rmj.cas.food.reports.classes;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +15,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,8 +29,22 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rmj.appdriver.GLogger;
 import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
@@ -35,6 +52,9 @@ import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.constants.UserRight;
 import org.rmj.appdriver.iface.GReport;
+import static org.rmj.cas.food.reports.classes.PurchaseReceiving.excelName;
+import static org.rmj.cas.food.reports.classes.Purchases.excelName;
+import static org.rmj.cas.food.reports.classes.Purchases.filePath;
 import org.rmj.replication.utility.LogWrapper;
 
 public class InvTransfer implements GReport {
@@ -48,6 +68,8 @@ public class InvTransfer implements GReport {
 
     private double xOffset = 0;
     private double yOffset = 0;
+    static String filePath = "D:/GGC_Java_Systems/excel export/";
+    static String excelName = "";
 
     public InvTransfer() {
         _rptparam = new LinkedList();
@@ -65,6 +87,7 @@ public class InvTransfer implements GReport {
         _rptparam.add("store.report.criteria.group");
         _rptparam.add("store.report.criteria.datefrom");
         _rptparam.add("store.report.criteria.datethru");
+        _rptparam.add("store.report.criteria.isexport");
     }
 
     @Override
@@ -127,6 +150,7 @@ public class InvTransfer implements GReport {
             System.setProperty("store.report.criteria.datethru", instance.getDateTo());
             System.setProperty("store.report.criteria.branch", instance.getOrigin());
             System.setProperty("store.report.criteria.destinat", instance.getDestination());
+            System.setProperty("store.report.criteria.isexport", String.valueOf(instance.isExport()));
             System.setProperty("store.report.criteria.group", "");
             return true;
         }
@@ -236,9 +260,34 @@ public class InvTransfer implements GReport {
             _message = "No record found...";
             return false;
         }
+//        rs.beforeFirst();
+//        //Convert the data-source to JasperReport data-source
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+        ObservableList<InvTransferModel> R1data = FXCollections.observableArrayList();
+        R1data.clear();
         rs.beforeFirst();
+        while (rs.next()) {
+            R1data.add(new InvTransferModel(    
+                    rs.getObject("sField01").toString(),
+                    rs.getObject("sField02").toString(),
+                    rs.getObject("sField03").toString(),
+                    rs.getObject("sField04").toString(),
+                    rs.getObject("sField05").toString(),
+                    rs.getObject("lField01").toString(),
+                    rs.getObject("lField02").toString()
+            ));
+        }
         //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+        
+        excelName = "Inventory Transfer Summary.xlsx";
+        if(System.getProperty("store.report.criteria.isexport").equals("true")){
+            String[] headers = { "Origin", "Destination", "Date", "Trans. No.", "TTL Qty", "TTL Amount", "Status"};
+            exportToExcel(R1data, headers);
+        }
+
 
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -283,9 +332,42 @@ public class InvTransfer implements GReport {
             _message = "No record found...";
             return false;
         }
+//        rs.beforeFirst();
+//        //Convert the data-source to JasperReport data-source
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+
+        ObservableList<InvTransferModel> R1data = FXCollections.observableArrayList();
+        R1data.clear();
         rs.beforeFirst();
+        while (rs.next()) {
+            double nTotal = Double.parseDouble(String.valueOf(rs.getObject("lField02"))) * Double.parseDouble(String.valueOf(rs.getObject("lField01")));
+            R1data.add(new InvTransferModel(
+                    rs.getObject("sField01").toString(),
+                    rs.getObject("sField02").toString(),
+                    rs.getObject("sField03").toString(),
+                    rs.getObject("sField04").toString(),
+                    rs.getObject("sField05").toString(),
+                    rs.getObject("sField06").toString(),
+                    rs.getObject("sField07").toString(),
+                    rs.getObject("sField08").toString(),
+                    rs.getObject("sField09").toString(),
+                    rs.getObject("sField10").toString(),
+                    rs.getObject("lField01").toString(),
+                    rs.getObject("lField02").toString(),
+                    String.valueOf(nTotal),
+                    rs.getObject("sField11").toString()
+            ));
+        }
         //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+//        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+        
+        excelName = "Inventory Transfer Detail.xlsx";
+        if(System.getProperty("store.report.criteria.isexport").equals("true")){
+            String[] headers = { "Origin", "Destination", "Trans. No.", "Date", "Inv. Tp", "Barcode", "Description",
+                    "Brand", "Measure", "Qty", "Cost", "Total", "Status", "D. Modified"};
+            exportToExcel(R1data, headers);
+        }
 
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -351,6 +433,7 @@ public class InvTransfer implements GReport {
                 + " WHEN '3' THEN 'CANCELLED'"
                 + " WHEN '4' THEN 'VOID'"
                 + " END `sField09`"
+                + ", a.dModified `sField11`"
                 + " FROM Inv_Transfer_Master a"
                 + " LEFT JOIN Branch i"
                 + " ON LEFT(a.sTransNox, 4) = i.sBranchCd"
@@ -422,5 +505,118 @@ public class InvTransfer implements GReport {
         }
 //        System.out.println (lsSQL);
         return lsSQL;
+    }
+    
+    public void exportToExcel(ObservableList<InvTransferModel> data, String[] headers) {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Inventory Transfer Data");
+
+        // Create header row
+        Row headerRow = sheet.createRow(0);
+        
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(getHeaderCellStyle(workbook));
+        }
+        
+        System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
+        
+        headerRow.setHeightInPoints(20);
+        
+        // Create a CellStyle with double format (e.g., two decimal places)
+        CellStyle doubleStyle = workbook.createCellStyle();
+        DataFormat format  = workbook.createDataFormat();
+        doubleStyle.setDataFormat(format.getFormat("#,##0.00")); // Adjust format as needed
+
+        // Populate data rows
+        int rowIndex = 1;
+        for (InvTransferModel item : data) {
+            Row row = sheet.createRow(rowIndex++);
+            
+            if(System.getProperty("store.report.criteria.presentation").equals("1")){
+                row.createCell(0).setCellValue(item.getsField10());
+                row.createCell(1).setCellValue(item.getsField01());
+                row.createCell(2).setCellValue(item.getsField02());
+                row.createCell(3).setCellValue(item.getsField03());
+                row.createCell(4).setCellValue(item.getsField04());
+                row.createCell(5).setCellValue(item.getsField05());
+                row.createCell(6).setCellValue(item.getsField06());
+                row.createCell(7).setCellValue(item.getsField08());
+                row.createCell(8).setCellValue(item.getsField07());
+                row.createCell(9).setCellValue(item.getlField01());
+                row.createCell(10).setCellValue(item.getlField02());
+                row.createCell(11).setCellValue(item.getlField03());
+                row.createCell(12).setCellValue(item.getsField09());
+                row.createCell(13).setCellValue(item.getsField11());
+                // Apply the double format style to the appropriate columns (10, 11, 12)
+                row.getCell(9).setCellStyle(doubleStyle);
+                row.getCell(10).setCellStyle(doubleStyle);
+                row.getCell(11).setCellStyle(doubleStyle);
+            }else{
+                row.createCell(0).setCellValue(item.getsField01());
+                row.createCell(1).setCellValue(item.getsField02());
+                row.createCell(2).setCellValue(item.getsField03());
+                row.createCell(3).setCellValue(item.getsField04());
+                row.createCell(4).setCellValue(item.getlField01());
+                row.createCell(5).setCellValue(item.getlField02());
+                row.createCell(6).setCellValue(item.getsField05());
+                
+                row.getCell(4).setCellStyle(doubleStyle);
+                row.getCell(5).setCellStyle(doubleStyle);
+            }
+            
+        }
+
+        // Auto-size columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+            int currentWidth = sheet.getColumnWidth(i);
+            sheet.setColumnWidth(i, currentWidth + 1000);
+            System.out.println("sheet width = " + sheet.getColumnWidth(i));
+        }
+
+        // Write to Excel file
+        try (FileOutputStream fileOut = new FileOutputStream(filePath + excelName)) {
+            workbook.write(fileOut);
+            System.out.println("Exported to Excel successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+  
+    private static CellStyle getHeaderCellStyle(Workbook workbook) {
+        CellStyle headerStyle = workbook.createCellStyle();
+        
+        // Set background color
+        headerStyle.setFillForegroundColor(IndexedColors.OLIVE_GREEN.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.WHITE.getIndex());
+        font.setFontHeightInPoints((short) 12);
+        headerStyle.setFont(font);
+        
+        // Set center alignment
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        // Set borders for the header cells
+        headerStyle.setBorderTop(BorderStyle.THIN);
+        headerStyle.setTopBorderColor(IndexedColors.WHITE.getIndex()); // Set top border color to black
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+        headerStyle.setBottomBorderColor(IndexedColors.WHITE.getIndex()); // Set bottom border color to black
+        headerStyle.setBorderLeft(BorderStyle.THIN);
+        headerStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex()); // Set left border color to black
+        headerStyle.setBorderRight(BorderStyle.THIN);
+        headerStyle.setRightBorderColor(IndexedColors.WHITE.getIndex()); // Set right border color to black
+        
+        return headerStyle;
     }
 }

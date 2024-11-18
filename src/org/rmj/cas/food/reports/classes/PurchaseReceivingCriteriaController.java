@@ -12,12 +12,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import static javafx.scene.input.KeyCode.ENTER;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -61,6 +63,8 @@ public class PurchaseReceivingCriteriaController implements Initializable {
     private TextField txtField03;
     @FXML
     private TextField txtField04;
+    @FXML
+    private CheckBox checkbox01;
 
     private GRider oApp;
     private boolean pbCancelled = true;
@@ -72,6 +76,7 @@ public class PurchaseReceivingCriteriaController implements Initializable {
     private String psSupplier = "";
     private String psBranch = "";
     private String psGroupBy = "";
+    private boolean pbExport = false;
 
     public void setGRider(GRider foApp) {
         oApp = foApp;
@@ -114,6 +119,9 @@ public class PurchaseReceivingCriteriaController implements Initializable {
         return psBranch;
     }
 
+    public boolean isExport() {
+        return pbExport;
+    }
     ToggleGroup tgPresentation;
     ToggleGroup tgPresentationDate;
 
@@ -155,6 +163,11 @@ public class PurchaseReceivingCriteriaController implements Initializable {
         pbLoaded = true;
     }
 
+    @FXML
+    void checkbox01_Clicked(MouseEvent event) {
+        boolean isChecked = checkbox01.isSelected();
+        pbExport = isChecked;
+    }
     private void loadRecord() {
         txtField01.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField02.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));

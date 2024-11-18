@@ -2,6 +2,7 @@
 
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
@@ -13,7 +14,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="dataPane" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="dataPane" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <StackPane fx:id="stack" layoutX="10.0" layoutY="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
       <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -56,7 +57,7 @@
             </AnchorPane>
          </right>
          <center>
-            <AnchorPane maxHeight="-Infinity" prefHeight="222.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
+            <AnchorPane maxHeight="-Infinity" prefHeight="240.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
                <children>
                   <Pane layoutX="11.0" layoutY="10.0" prefHeight="96.0" prefWidth="410.0" style="-fx-border-color: white;">
                      <children>
@@ -70,7 +71,7 @@
                            </font>
                         </Label>
                      </children></Pane>
-                  <Pane layoutX="11.0" layoutY="109.0" prefHeight="94.0" prefWidth="410.0" style="-fx-border-color: white;">
+                  <Pane layoutX="11.0" layoutY="109.0" prefHeight="119.0" prefWidth="410.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="13.0" layoutY="6.0" text="Filter By">
                            <font>
@@ -81,6 +82,7 @@
                         <TextField fx:id="txtField03" layoutX="88.0" layoutY="31.0" minHeight="25.0" prefHeight="25.0" prefWidth="312.0" />
                         <Label layoutX="15.0" layoutY="62.0" text="Inv. Type" />
                         <TextField fx:id="txtField04" layoutX="88.0" layoutY="58.0" minHeight="25.0" prefHeight="25.0" prefWidth="312.0" />
+                        <CheckBox fx:id="checkbox01" layoutX="12.0" layoutY="92.0" mnemonicParsing="false" onMouseClicked="#checkbox01_Clicked" text="Export to Excel" />
                      </children>
                   </Pane>
                </children>

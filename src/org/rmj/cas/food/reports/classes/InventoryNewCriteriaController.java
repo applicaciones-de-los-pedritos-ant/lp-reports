@@ -12,10 +12,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import static javafx.scene.input.KeyCode.ENTER;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -47,6 +49,8 @@ public class InventoryNewCriteriaController implements Initializable {
     private FontAwesomeIconView glyphExit;
     @FXML
     private TextField txtField03,txtField04;
+    @FXML
+    private CheckBox checkbox01;
 
     private GRider oApp;
     private boolean pbCancelled = true;
@@ -56,6 +60,7 @@ public class InventoryNewCriteriaController implements Initializable {
     private String psBranch = "";
     private String psInvTypCd = "";
     private String psGroupBy = "";
+    private boolean pbExport = false;
 
     public void setGRider(GRider foApp) {
         oApp = foApp;
@@ -88,6 +93,9 @@ public class InventoryNewCriteriaController implements Initializable {
     public String getInvType() {
         return psInvTypCd;
     }
+    public boolean isExport() {
+        return pbExport;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -116,6 +124,11 @@ public class InventoryNewCriteriaController implements Initializable {
         pbLoaded = true;
     }
 
+    @FXML
+    void checkbox01_Clicked(MouseEvent event) {
+        boolean isChecked = checkbox01.isSelected();
+        pbExport = isChecked;
+    }
     private void loadRecord() {
         txtField01.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField02.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
