@@ -6,6 +6,7 @@
  */
 package org.rmj.cas.food.reports.classes;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +33,19 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rmj.appdriver.GLogger;
 import org.rmj.appdriver.GRider;
 import org.rmj.appdriver.MiscUtil;
@@ -53,6 +67,7 @@ public class Inventory implements GReport {
 
     private double xOffset = 0;
     private double yOffset = 0;
+    static String filePath = "D:/GGC_Java_Systems/excel export/";
 
     public Inventory() {
         _rptparam = new LinkedList();
@@ -69,6 +84,7 @@ public class Inventory implements GReport {
         _rptparam.add("store.report.criteria.group");
         _rptparam.add("store.report.criteria.datefrom");
         _rptparam.add("store.report.criteria.datethru");
+        _rptparam.add("store.report.criteria.isexport");
     }
 
     @Override
@@ -131,6 +147,7 @@ public class Inventory implements GReport {
             System.setProperty("store.report.criteria.branch", instance.getBranch());
             System.setProperty("store.report.criteria.group", "");
             System.setProperty("store.report.criteria.type", instance.getInvType());
+            System.setProperty("store.report.criteria.isexport", String.valueOf(instance.isExport()));
             return true;
         }
         return false;
@@ -396,6 +413,10 @@ public class Inventory implements GReport {
 
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
+        if(System.getProperty("store.report.criteria.isexport").equals("true")){
+            String[] headers = { "Branch", "Inventory Type", "Barcode", "Desciption", "Brand", "Measure", "QOH", "Beg. Inv", "Qty-In", "Qty-Out", "End Inv"};
+            exportToExcel(R1data, "Inventory", headers);
+        }
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
         params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");
@@ -676,5 +697,101 @@ public class Inventory implements GReport {
 
         return true;
 
+    }
+    
+    
+    public static void exportToExcel(ObservableList<InventoryModel> data, String fileName, String[] headers) {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Inventory Data");
+        
+        // Create header row
+        Row headerRow = sheet.createRow(0);
+        
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(getHeaderCellStyle(workbook));
+        }
+        
+        System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
+        
+        headerRow.setHeightInPoints(20);
+        
+        // Create a CellStyle with double format (e.g., two decimal places)
+        CellStyle doubleStyle = workbook.createCellStyle();
+        DataFormat format  = workbook.createDataFormat();
+        doubleStyle.setDataFormat(format.getFormat("#,##0.00")); // Adjust format as needed
+        // Populate data rows
+        int rowIndex = 1;
+        for (InventoryModel item : data) {
+            Row row = sheet.createRow(rowIndex++);
+            row.createCell(0).setCellValue(item.getsField01());
+            row.createCell(1).setCellValue(item.getsField02());
+            row.createCell(2).setCellValue(item.getsField03());
+            row.createCell(3).setCellValue(item.getsField05());
+            row.createCell(4).setCellValue(item.getsField04());
+            row.createCell(5).setCellValue(item.getlField01());
+            row.createCell(6).setCellValue(item.getlField02());
+            row.createCell(7).setCellValue(item.getlField03());
+            row.createCell(8).setCellValue(item.getlField04());
+            row.createCell(9).setCellValue(item.getlField05());
+            
+            row.getCell(5).setCellStyle(doubleStyle);
+            row.getCell(6).setCellStyle(doubleStyle);
+            row.getCell(7).setCellStyle(doubleStyle);
+            row.getCell(8).setCellStyle(doubleStyle);
+            row.getCell(9).setCellStyle(doubleStyle);
+        }
+
+        // Auto-size columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+            int currentWidth = sheet.getColumnWidth(i);
+            sheet.setColumnWidth(i, currentWidth + 1000);
+            System.out.println("sheet width = " + sheet.getColumnWidth(i));
+        }
+
+        // Write to Excel file
+        try (FileOutputStream fileOut = new FileOutputStream(filePath + fileName + ".xlsx")) {
+            workbook.write(fileOut);
+            System.out.println("Exported to Excel successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+  
+    private static CellStyle getHeaderCellStyle(Workbook workbook) {
+        CellStyle headerStyle = workbook.createCellStyle();
+        
+        // Set background color
+        headerStyle.setFillForegroundColor(IndexedColors.OLIVE_GREEN.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.WHITE.getIndex());
+        font.setFontHeightInPoints((short) 12);
+        headerStyle.setFont(font);
+        
+        // Set center alignment
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        // Set borders for the header cells
+        headerStyle.setBorderTop(BorderStyle.THIN);
+        headerStyle.setTopBorderColor(IndexedColors.WHITE.getIndex()); // Set top border color to black
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+        headerStyle.setBottomBorderColor(IndexedColors.WHITE.getIndex()); // Set bottom border color to black
+        headerStyle.setBorderLeft(BorderStyle.THIN);
+        headerStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex()); // Set left border color to black
+        headerStyle.setBorderRight(BorderStyle.THIN);
+        headerStyle.setRightBorderColor(IndexedColors.WHITE.getIndex()); // Set right border color to black
+        
+        return headerStyle;
     }
 }
