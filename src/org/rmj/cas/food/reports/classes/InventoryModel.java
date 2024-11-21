@@ -32,6 +32,38 @@ public class InventoryModel {
         this.lField05 = new SimpleDoubleProperty(Double.parseDouble(index11));
         this.sField06 = new SimpleStringProperty(index12);
     }
+    /*
+    *Model for Inventory presentation
+    */
+    InventoryModel(String index00,String index01, String index02, String index03, String index04, String index05,
+            String index06, String index07, String index08){
+        this.sField00 = new SimpleStringProperty(index00);
+        this.sField01 = new SimpleStringProperty(index01);
+        this.sField02 = new SimpleStringProperty(index02);
+        this.sField03 = new SimpleStringProperty(index03);
+        this.sField04 = new SimpleStringProperty(index04);
+        this.sField05 = new SimpleStringProperty(index05);
+        this.sField06 = new SimpleStringProperty(index06);
+        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index07));
+        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index08));
+    }
+    /*
+    *Model for Inventory movement
+    */
+    InventoryModel(String index00,String index01, String index02, String index03, String index04, String index05,
+            String index06, String index07, String index08, String index09, String index10){
+        this.sField00 = new SimpleStringProperty(index00);
+        this.sField01 = new SimpleStringProperty(index01);
+        this.sField02 = new SimpleStringProperty(index02);
+        this.sField03 = new SimpleStringProperty(index03);
+        this.sField04 = new SimpleStringProperty(index04);
+        this.sField05 = new SimpleStringProperty(index05);
+        this.sField06 = new SimpleStringProperty(index06);
+        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index07));
+        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index08));
+        this.lField03 = new SimpleDoubleProperty(Double.parseDouble(index09));
+        this.lField04 = new SimpleDoubleProperty(Double.parseDouble(index10));
+    }
     public String getsField00() {
         return sField00.get();
     }
