@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="dataPane" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="dataPane" prefHeight="275.0" prefWidth="530.0" stylesheets="@../resources/ReportMenu.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <StackPane fx:id="stack" layoutX="10.0" layoutY="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
       <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -58,9 +58,9 @@
             </AnchorPane>
          </right>
          <center>
-            <AnchorPane maxHeight="-Infinity" prefHeight="230.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
+            <AnchorPane maxHeight="-Infinity" prefHeight="245.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
                <children>
-                  <Pane layoutX="165.0" layoutY="10.0" prefHeight="126.0" prefWidth="256.0" style="-fx-border-color: white;">
+                  <Pane layoutX="165.0" layoutY="10.0" prefHeight="131.0" prefWidth="256.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="11.0" layoutY="69.0" text="From" />
                         <TextField fx:id="txtField01" layoutX="57.0" layoutY="65.0" minHeight="25.0" prefHeight="25.0" prefWidth="189.0" />
@@ -74,7 +74,7 @@
                         <RadioButton fx:id="radioBtn03" layoutX="14.0" layoutY="42.0" mnemonicParsing="false" text="Date Transaction" />
                         <RadioButton fx:id="radioBtn04" layoutX="142.0" layoutY="42.0" mnemonicParsing="false" text="Date Reference" />
                      </children></Pane>
-                  <Pane fx:id="pnePresentation" layoutX="11.0" layoutY="10.0" prefHeight="126.0" prefWidth="151.0" style="-fx-border-color: white;">
+                  <Pane fx:id="pnePresentation" layoutX="11.0" layoutY="10.0" prefHeight="131.0" prefWidth="151.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="13.0" layoutY="5.0" text="Presentation">
                            <font>
@@ -87,7 +87,7 @@
                         <CheckBox fx:id="checkbox01" layoutX="15.0" layoutY="103.0" mnemonicParsing="false" onMouseClicked="#checkbox01_Clicked" text="Export to Excel" />
                      </children>
                   </Pane>
-                  <Pane layoutX="11.0" layoutY="139.0" prefHeight="83.0" prefWidth="410.0" style="-fx-border-color: white;">
+                  <Pane layoutX="11.0" layoutY="146.0" prefHeight="85.0" prefWidth="410.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="13.0" layoutY="6.0" text="Filter By">
                            <font>

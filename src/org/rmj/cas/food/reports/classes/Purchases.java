@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -256,10 +259,11 @@ public class Purchases implements GReport{
         String lsSQL = getReportSQL();
         String lsCondition = "";
         String lsDate = "";
+        String lsExcelDate = "";
         
         if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
                 !System.getProperty("store.report.criteria.datethru").equals("")){
-
+            lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
                         SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
             
@@ -302,7 +306,7 @@ public class Purchases implements GReport{
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
         
-        excelName = "Purchases Detail.xlsx";
+        excelName = "Purchases Detail - " + lsExcelDate + ".xlsx";
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
             String[] headers = { "Refer #", "Date", "Supplier", "Barcode", "Description", "Brand", "Measure", "Qty", "Cost", "Total"};
             exportToExcel(R1data, headers);
@@ -347,10 +351,13 @@ public class Purchases implements GReport{
         String lsSQL = getReportSQLSum();
         String lsCondition = "";
         String lsDate = "";
+        String lsExcelDate = "";
         
         if (!System.getProperty("store.report.criteria.datefrom").equals("") &&
                 !System.getProperty("store.report.criteria.datethru").equals("")){
 
+            lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
+            
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND " +
                         SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
             
@@ -389,7 +396,7 @@ public class Purchases implements GReport{
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
         
-        excelName = "Purchases Summary.xlsx";
+        excelName = "Purchases Summary - " + lsExcelDate + ".xlsx";
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
             String[] headers = { "Refer #", "Date", "Supplier", "Destination", "Term", "Total", "Status"};
             exportToExcel(R1data, headers);
@@ -414,7 +421,28 @@ public class Purchases implements GReport{
         
         return true;
     }
-    
+    private String ExcelDate(String lsDateFrom, String lsDateThru){
+        
+        try {
+         // Parse the date string to a Date object
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateFrom, dateThru;
+            dateFrom = inputFormat.parse(lsDateFrom);
+            dateThru = inputFormat.parse(lsDateThru);
+            
+            // Define the desired output format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
+
+            // Convert the Date object to the desired string format
+            String formattedDateFrom = outputFormat.format(dateFrom);
+            String formattedDateThru = outputFormat.format(dateThru);
+            return formattedDateFrom + " to " + formattedDateThru;
+        } catch (ParseException ex) {
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+
+    }
     private void closeReport(){
         _rptparam.forEach(item->System.clearProperty((String) item));
         System.clearProperty("store.report.file");
@@ -485,7 +513,7 @@ public class Purchases implements GReport{
                                 " ON c.sMeasurID = f.sMeasurID" + 
                     " WHERE a.sTransNox = b.sTransNox" +                
                         " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()) +
-                        " AND a.cTranStat <> '3'";
+                        " AND a.cTranStat NOT IN ('0','3')";
         }
         
     }
@@ -510,11 +538,12 @@ public class Purchases implements GReport{
                 " LEFT JOIN Term d ON a.sTermCode = d.sTermCode" +
                 ", Client_Master b" +
             " WHERE a.sSupplier = b.sClientID" + 
-                " AND a.cTranStat <> '3'";
+                " AND LEFT(a.sTransNox, '4') = " + SQLUtil.toSQL(_instance.getBranchCode()) +
+                " AND a.cTranStat NOT IN ('0','3')";
         
-        if (_instance.getUserLevel() < UserRight.ENGINEER){
-            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
-        }
+//        if (_instance.getUserLevel() <= UserRight.ENGINEER){
+//            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+//        }
         
         return lsSQL;
     }

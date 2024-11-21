@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -237,6 +239,8 @@ public class InventoryMovement implements GReport {
     }
     
     private boolean printInventory() throws SQLException {
+        
+        try {
         String lsCondition = "";
         String lsDate = "";
         String lsDateFrom = "";
@@ -283,10 +287,11 @@ public class InventoryMovement implements GReport {
 
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-        excelName = "Inventory (presentation).xlsx";
+        excelName = "Inventory as of - " + ExcelDateThru(lsDateThru) + ".xlsx";
+            
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
-            String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "QOH"};
-            exportToExcel(R1data, "Inventory (presentation)", headers);
+            String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "QOH", "End Inv. as of " + ExcelDateThru(lsDateThru)};
+            exportToExcel(R1data, headers);
         }
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -307,8 +312,6 @@ public class InventoryMovement implements GReport {
         } else {
             params.put("sPrintdBy", "");
         }
-
-        try {
             
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
                     + System.getProperty("store.report.file"),
@@ -320,7 +323,7 @@ public class InventoryMovement implements GReport {
 //                    jrRS);
         } catch (JRException ex) {
             Logger.getLogger(InventoryMovement.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } 
 
         return true;
     }
@@ -331,10 +334,12 @@ public class InventoryMovement implements GReport {
         String lsDateFrom = "";
         String lsDateThru = "";
         String lsBranch = "";
+        String lsExcelDate = "";
         if (!System.getProperty("store.report.criteria.datefrom").equals("")
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
             lsDateFrom = System.getProperty("store.report.criteria.datefrom");
             lsDateThru = System.getProperty("store.report.criteria.datethru");
+            lsExcelDate = ExcelDate(lsDateFrom, lsDateThru);
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -349,7 +354,7 @@ public class InventoryMovement implements GReport {
         } else {
             lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         }
-        System.out.println(getReportSQL(lsDateThru, lsBranch));
+        System.out.println(MiscUtil.addCondition(getReportSQLMovement(), lsCondition));
         ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQLMovement(), lsCondition));
         if(MiscUtil.RecordCount(rs)==0){
             _message = "No record found...";
@@ -392,10 +397,10 @@ public class InventoryMovement implements GReport {
 
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-        excelName = "Inventory (presentation).xlsx";
+        excelName = "Inventory Movement - " + lsExcelDate + ".xlsx";
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
             String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "Qty-In", "Qty-Out", "End Inv", "Current Inv."};
-            exportToExcel(R1data, "Inventory Movement", headers);
+            exportToExcel(R1data, headers);
         }
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -506,7 +511,7 @@ public class InventoryMovement implements GReport {
             ",  c.sBarCodex `sField02` " +
             ",  c.sDescript `sField03` " +
             ",  d.sDescript `sField04` " +
-            ",  e.sDescript `sField05` " +
+            ",  IFNULL(e.sDescript, '') `sField05` " +
             ",  g.sMeasurNm `sField06` " +
             ",  SUM(b.nQtyInxxx) `lField01` " +
             ",  SUM(b.nQtyOutxx) `lField02` " +
@@ -526,9 +531,51 @@ public class InventoryMovement implements GReport {
             "  GROUP BY a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
+    private String ExcelDate(String lsDateFrom, String lsDateThru){
+        
+        try {
+         // Parse the date string to a Date object
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateFrom, dateThru;
+            dateFrom = inputFormat.parse(lsDateFrom);
+            dateThru = inputFormat.parse(lsDateThru);
+            
+            // Define the desired output format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
+
+            // Convert the Date object to the desired string format
+            String formattedDateFrom = outputFormat.format(dateFrom);
+            String formattedDateThru = outputFormat.format(dateThru);
+            return formattedDateFrom + " to " + formattedDateThru;
+        } catch (ParseException ex) {
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+
+    }
     
     
-    public static void exportToExcel(ObservableList<InventoryModel> data, String fileName, String[] headers) {
+    private String ExcelDateThru(String lsDateThru){
+        
+        try {
+         // Parse the date string to a Date object
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateThru;
+            dateThru = inputFormat.parse(lsDateThru);
+            
+            // Define the desired output format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
+
+            String formattedDateThru = outputFormat.format(dateThru);
+            return formattedDateThru;
+        } catch (ParseException ex) {
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+
+    }
+    
+    public static void exportToExcel(ObservableList<InventoryModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Inventory Data");
         
@@ -583,7 +630,7 @@ public class InventoryMovement implements GReport {
         }
 
         // Write to Excel file
-        try (FileOutputStream fileOut = new FileOutputStream(filePath + fileName + ".xlsx")) {
+        try (FileOutputStream fileOut = new FileOutputStream(filePath + excelName)) {
             workbook.write(fileOut);
             System.out.println("Exported to Excel successfully.");
         } catch (IOException e) {

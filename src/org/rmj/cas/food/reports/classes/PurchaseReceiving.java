@@ -15,6 +15,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -250,10 +253,12 @@ public class PurchaseReceiving implements GReport {
             String lsSQL = getReportSQLSum();
             String lsCondition = "";
             String lsDate = "";
+            String lsExcelDate = "";
 
             if (!System.getProperty("store.report.criteria.datefrom").equals("")
                     && !System.getProperty("store.report.criteria.datethru").equals("")) {
-
+                
+                lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
                 lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                         + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -309,7 +314,7 @@ public class PurchaseReceiving implements GReport {
             //JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
             JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
         
-            excelName = "Purchase Receiving Summary.xlsx";
+            excelName = "Purchase Receiving Summary - " + lsExcelDate + ".xlsx";
             if(System.getProperty("store.report.criteria.isexport").equals("true")){
                 String[] headers = { "Refer #", "Order No", "D. Transact", "D. Received", "Supplier","TTL Qty", "Tran Total", "Amount Pd", "Status"};
                 exportToExcel(R1data, headers);
@@ -386,9 +391,12 @@ public class PurchaseReceiving implements GReport {
         String lsSQL = getReportSQL();
         String lsCondition = "";
         String lsDate = "";
+        String lsExcelDate = "";
 
         if (!System.getProperty("store.report.criteria.datefrom").equals("")
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
+            
+            lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
 
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
@@ -454,7 +462,7 @@ public class PurchaseReceiving implements GReport {
         
         String[] headers = { "Branch", "Order No", "Refer #", "Date", "Supplier", "Barcode", "Description",
                 "Brand", "Inv. Tp", "Measure", "Qty", "Cost", "Total", "Status"};
-        excelName = "Purchase Receiving Detail.xlsx";
+        excelName = "Purchase Receiving Detail - " + lsExcelDate + ".xlsx";
         
         if (!System.getProperty("store.report.criteria.presentationdate").equals("1")) {
             headers[3] = "D. Transact";
@@ -598,6 +606,28 @@ public class PurchaseReceiving implements GReport {
         }
     }
     
+    private String ExcelDate(String lsDateFrom, String lsDateThru){
+        
+        try {
+         // Parse the date string to a Date object
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateFrom, dateThru;
+            dateFrom = inputFormat.parse(lsDateFrom);
+            dateThru = inputFormat.parse(lsDateThru);
+            
+            // Define the desired output format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
+
+            // Convert the Date object to the desired string format
+            String formattedDateFrom = outputFormat.format(dateFrom);
+            String formattedDateThru = outputFormat.format(dateThru);
+            return formattedDateFrom + " to " + formattedDateThru;
+        } catch (ParseException ex) {
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+
+    }
     public void exportToExcel(ObservableList<PurchasesModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Purchase Receiving Data");
