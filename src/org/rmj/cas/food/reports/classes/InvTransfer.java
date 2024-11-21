@@ -10,6 +10,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -239,10 +242,11 @@ public class InvTransfer implements GReport {
         String lsCondition = "";
         String lsSQL = getReportSQLSummary();
         String lsDate = "";
+        String lsExcelDate = "";
 
         if (!System.getProperty("store.report.criteria.datefrom").equals("")
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
-
+            lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -282,7 +286,7 @@ public class InvTransfer implements GReport {
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
         
-        excelName = "Inventory Transfer Summary.xlsx";
+        excelName = "Inventory Transfer Summary - " + lsExcelDate + ".xlsx";
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
             String[] headers = { "Origin", "Destination", "Date", "Trans. No.", "TTL Qty", "TTL Amount", "Status"};
             exportToExcel(R1data, headers);
@@ -313,10 +317,11 @@ public class InvTransfer implements GReport {
     private boolean printDetail() throws SQLException {
         String lsCondition = "";
         String lsDate = "";
+        String lsExcelDate = "";
 
         if (!System.getProperty("store.report.criteria.datefrom").equals("")
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
-
+            lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -362,7 +367,7 @@ public class InvTransfer implements GReport {
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
         
-        excelName = "Inventory Transfer Detail.xlsx";
+        excelName = "Inventory Transfer Detail - " + lsExcelDate + ".xlsx";
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
             String[] headers = { "Origin", "Destination", "Trans. No.", "Date", "Inv. Tp", "Barcode", "Description",
                     "Brand", "Measure", "Qty", "Cost", "Total", "Status", "D. Modified"};
@@ -506,7 +511,28 @@ public class InvTransfer implements GReport {
 //        System.out.println (lsSQL);
         return lsSQL;
     }
-    
+    private String ExcelDate(String lsDateFrom, String lsDateThru){
+        
+        try {
+         // Parse the date string to a Date object
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateFrom, dateThru;
+            dateFrom = inputFormat.parse(lsDateFrom);
+            dateThru = inputFormat.parse(lsDateThru);
+            
+            // Define the desired output format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
+
+            // Convert the Date object to the desired string format
+            String formattedDateFrom = outputFormat.format(dateFrom);
+            String formattedDateThru = outputFormat.format(dateThru);
+            return formattedDateFrom + " to " + formattedDateThru;
+        } catch (ParseException ex) {
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+
+    }
     public void exportToExcel(ObservableList<InvTransferModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Inventory Transfer Data");
