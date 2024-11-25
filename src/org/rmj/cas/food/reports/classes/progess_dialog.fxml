@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="anchorProgess" prefWidth="400.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox fx:id="vbProgress" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Label text="Generating report please wait...">
+               <font>
+                  <Font size="16.0" />
+               </font>
+            </Label>
+            <Label text="(Note: Please don't do anything while generating report!!!)" textFill="#d30909">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <ProgressIndicator prefHeight="38.0" prefWidth="38.0">
+               <VBox.margin>
+                  <Insets top="25.0" />
+               </VBox.margin>
+            </ProgressIndicator>
+         </children>
+      </VBox>
+      <AnchorPane fx:id="reportPane" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+   </children>
+</AnchorPane>

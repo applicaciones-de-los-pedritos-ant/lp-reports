@@ -60,12 +60,12 @@
          <center>
             <AnchorPane maxHeight="-Infinity" prefHeight="225.0" prefWidth="430.0" style="-fx-background-color: #B3B6B7;" BorderPane.alignment="CENTER">
                <children>
-                  <Pane layoutX="197.0" layoutY="9.0" prefHeight="96.0" prefWidth="224.0" style="-fx-border-color: white;">
+                  <Pane layoutX="197.0" layoutY="9.0" prefHeight="122.0" prefWidth="224.0" style="-fx-border-color: white;">
                      <children>
-                        <Label layoutX="8.0" layoutY="40.0" text="From" />
-                        <TextField fx:id="txtField01" layoutX="45.0" layoutY="36.0" minHeight="25.0" prefHeight="25.0" prefWidth="170.0" />
-                        <Label layoutX="8.0" layoutY="67.0" text="Thru" />
-                        <TextField fx:id="txtField02" layoutX="45.0" layoutY="63.0" minHeight="25.0" prefHeight="25.0" prefWidth="170.0" />
+                        <Label layoutX="8.0" layoutY="41.0" text="From" />
+                        <TextField fx:id="txtField01" layoutX="45.0" layoutY="37.0" minHeight="25.0" prefHeight="25.0" prefWidth="170.0" />
+                        <Label layoutX="8.0" layoutY="68.0" text="Thru" />
+                        <TextField fx:id="txtField02" layoutX="45.0" layoutY="64.0" minHeight="25.0" prefHeight="25.0" prefWidth="170.0" />
                         <Label layoutX="10.0" layoutY="6.0" text="Date Criteria">
                            <font>
                               <Font name="System Bold" size="12.0" />
@@ -73,7 +73,7 @@
                         </Label>
                      </children>
                   </Pane>
-                  <Pane layoutX="11.0" layoutY="9.0" prefHeight="96.0" prefWidth="184.0" style="-fx-border-color: white;">
+                  <Pane layoutX="11.0" layoutY="9.0" prefHeight="122.0" prefWidth="184.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="20.0" layoutY="6.0" text="Presentation">
                            <font>
@@ -82,9 +82,11 @@
                         </Label>
                         <RadioButton fx:id="radioBtn01" layoutX="20.0" layoutY="36.0" mnemonicParsing="false" text="Inventory" />
                         <RadioButton fx:id="radioBtn02" layoutX="20.0" layoutY="64.0" mnemonicParsing="false" text="Inventory Movement" />
+                        <CheckBox fx:id="checkbox01" layoutX="20.0" layoutY="97.0" mnemonicParsing="false" onMouseClicked="#checkbox01_Clicked" text="Export to Excel" />
+                        <Separator layoutX="9.0" layoutY="88.0" prefWidth="160.0" />
                      </children>
                   </Pane>
-                  <Pane layoutX="11.0" layoutY="109.0" prefHeight="106.0" prefWidth="410.0" style="-fx-border-color: white;">
+                  <Pane layoutX="11.0" layoutY="141.0" prefHeight="75.0" prefWidth="410.0" style="-fx-border-color: white;">
                      <children>
                         <Label layoutX="13.0" layoutY="6.0" text="Filter By">
                            <font>
@@ -93,7 +95,6 @@
                         </Label>
                         <Label layoutX="15.0" layoutY="35.0" text="Branch" />
                         <TextField fx:id="txtField03" layoutX="88.0" layoutY="31.0" minHeight="25.0" prefHeight="25.0" prefWidth="312.0" />
-                        <CheckBox fx:id="checkbox01" layoutX="12.0" layoutY="72.0" mnemonicParsing="false" onMouseClicked="#checkbox01_Clicked" text="Export to Excel" />
                      </children>
                   </Pane>
                </children>

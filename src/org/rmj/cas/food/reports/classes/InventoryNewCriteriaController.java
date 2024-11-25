@@ -158,6 +158,10 @@ public class InventoryNewCriteriaController implements Initializable {
                 } else {
                     psDateFrom = CommonUtils.xsDateShort(txtField01.getText());
                 }
+                if(psBranch.isEmpty()){
+                    ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid branch.");
+                    return;
+                }
 
                 if (CommonUtils.isDate(txtField02.getText(), pxeDateFormat)) {
                     psDateThru = SQLUtil.dateFormat(SQLUtil.toDate(txtField02.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
