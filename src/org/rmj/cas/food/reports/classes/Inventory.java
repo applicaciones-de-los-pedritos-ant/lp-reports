@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -153,77 +154,103 @@ public class Inventory implements GReport {
         return false;
     }
 
+    boolean bResult = false;
     @Override
     public boolean processReport() {
-        boolean bResult = false;
+        bResult = false;
+        Task<Boolean> reportTask = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                updateMessage("Loading report...");
+                bResult = false;
 
-        //Get the criteria as extracted from getParam()
-//        if(System.getProperty("store.report.criteria.presentation").equals("0")){
-//            System.setProperty("store.report.no", "1");
-//        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
-//            System.setProperty("store.report.no", "3");
-//        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
-//            System.setProperty("store.report.no", "4");
-//        }else{
-//            System.setProperty("store.report.no", "2");
-//        }
-        System.setProperty("store.report.no", "2");
+                // Simulate long-running task
+                Thread.sleep(1000);
+                
+                System.setProperty("store.report.no", "2");
 
-        //Load the jasper report to be use by this object
-        String lsSQL = "SELECT sFileName, sReportHd"
-                + " FROM xxxReportDetail"
-                + " WHERE sReportID = " + SQLUtil.toSQL(System.getProperty("store.report.id"))
-                + " AND nEntryNox = " + SQLUtil.toSQL(System.getProperty("store.report.no"));
+                //Load the jasper report to be use by this object
+                String lsSQL = "SELECT sFileName, sReportHd"
+                        + " FROM xxxReportDetail"
+                        + " WHERE sReportID = " + SQLUtil.toSQL(System.getProperty("store.report.id"))
+                        + " AND nEntryNox = " + SQLUtil.toSQL(System.getProperty("store.report.no"));
 
-        //Check if in debug mode...
-        if (System.getProperty("store.default.debug").equalsIgnoreCase("true")) {
-            System.out.println(System.getProperty("store.report.class") + ".processReport: " + lsSQL);
-        }
+                //Check if in debug mode...
+                if (System.getProperty("store.default.debug").equalsIgnoreCase("true")) {
+                    System.out.println(System.getProperty("store.report.class") + ".processReport: " + lsSQL);
+                }
 
-        ResultSet loRS = _instance.executeQuery(lsSQL);
+                ResultSet loRS = _instance.executeQuery(lsSQL);
 
-        try {
-            if (!loRS.next()) {
-                _message = "Invalid report was detected...";
+                try {
+                    if (!loRS.next()) {
+                        _message = "Invalid report was detected...";
+                        closeReport();
+                        bResult = false;
+                        return bResult;
+                    }
+                    System.setProperty("store.report.file", loRS.getString("sFileName"));
+                    System.setProperty("store.report.header", loRS.getString("sReportHd"));
+
+                    switch (Integer.valueOf(System.getProperty("store.report.no"))) {
+        //                case 1:
+        //                    bResult = printSummary();
+        //                    break;
+                        case 2:
+                            bResult = printDetails();
+                    }
+
+                    if (!bResult) {
+                        closeReport();
+                        bResult = false;
+                        stage.close();
+                        return bResult;
+                    }
+                    if (System.getProperty("store.report.is_log").equalsIgnoreCase("true")) {
+                        logReport();
+                    }
+                    JasperViewer jv = new JasperViewer(_jrprint, false);
+                    jv.setVisible(true);
+                    jv.setAlwaysOnTop(bResult);
+
+                } catch (SQLException ex) {
+                    _message = ex.getMessage();
+                    //Check if in debug mode...
+                    if (System.getProperty("store.default.debug").equalsIgnoreCase("true")) {
+                        ex.printStackTrace();
+                    }
+                    GLogger.severe(System.getProperty("store.report.class"), "processReport", ExceptionUtils.getStackTrace(ex));
+
+                    closeReport();
+                    bResult = false;
+                    return bResult;
+                }
+                
                 closeReport();
-                return false;
-            }
-            System.setProperty("store.report.file", loRS.getString("sFileName"));
-            System.setProperty("store.report.header", loRS.getString("sReportHd"));
-
-            switch (Integer.valueOf(System.getProperty("store.report.no"))) {
-//                case 1:
-//                    bResult = printSummary();
-//                    break;
-                case 2:
-                    bResult = printDetails();
+                return bResult;
             }
 
-            if (!bResult) {
-                closeReport();
-                return false;
-            }
-            if (System.getProperty("store.report.is_log").equalsIgnoreCase("true")) {
-                logReport();
-            }
-            JasperViewer jv = new JasperViewer(_jrprint, false);
-            jv.setVisible(true);
-            jv.setAlwaysOnTop(bResult);
+         
+        };
+        
 
-        } catch (SQLException ex) {
-            _message = ex.getMessage();
-            //Check if in debug mode...
-            if (System.getProperty("store.default.debug").equalsIgnoreCase("true")) {
-                ex.printStackTrace();
-            }
-            GLogger.severe(System.getProperty("store.report.class"), "processReport", ExceptionUtils.getStackTrace(ex));
+        // Handle task completion
+        reportTask.setOnSucceeded(e -> {
+            stage.close();
+            System.out.println("Report loaded successfully!");
+        });
 
-            closeReport();
-            return false;
-        }
+        reportTask.setOnFailed(e -> {
+            stage.close();
+            System.out.println("Report failed load!!!");
+//            progressIndicator.setVisible(false);
+//            System.err.println("Failed to load the report: " + reportTask.getException().getMessage());
+        });
 
-        closeReport();
-        return true;
+        // Run the task in a background thread
+        new Thread(reportTask).start();
+        displayProgress();
+        return bResult;
     }
 
     @Override
@@ -725,22 +752,23 @@ public class Inventory implements GReport {
         int rowIndex = 1;
         for (InventoryModel item : data) {
             Row row = sheet.createRow(rowIndex++);
-            row.createCell(0).setCellValue(item.getsField01());
-            row.createCell(1).setCellValue(item.getsField02());
-            row.createCell(2).setCellValue(item.getsField03());
-            row.createCell(3).setCellValue(item.getsField05());
-            row.createCell(4).setCellValue(item.getsField04());
-            row.createCell(5).setCellValue(item.getlField01());
-            row.createCell(6).setCellValue(item.getlField02());
-            row.createCell(7).setCellValue(item.getlField03());
-            row.createCell(8).setCellValue(item.getlField04());
-            row.createCell(9).setCellValue(item.getlField05());
+            row.createCell(0).setCellValue(item.getsField06());
+            row.createCell(1).setCellValue(item.getsField01());
+            row.createCell(2).setCellValue(item.getsField02());
+            row.createCell(3).setCellValue(item.getsField03());
+            row.createCell(4).setCellValue(item.getsField05());
+            row.createCell(5).setCellValue(item.getsField04());
+            row.createCell(6).setCellValue(item.getlField01());
+            row.createCell(7).setCellValue(item.getlField02());
+            row.createCell(8).setCellValue(item.getlField03());
+            row.createCell(9).setCellValue(item.getlField04());
+            row.createCell(10).setCellValue(item.getlField05());
             
-            row.getCell(5).setCellStyle(doubleStyle);
             row.getCell(6).setCellStyle(doubleStyle);
             row.getCell(7).setCellStyle(doubleStyle);
             row.getCell(8).setCellStyle(doubleStyle);
             row.getCell(9).setCellStyle(doubleStyle);
+            row.getCell(10).setCellStyle(doubleStyle);
         }
 
         // Auto-size columns
@@ -793,5 +821,47 @@ public class Inventory implements GReport {
         headerStyle.setRightBorderColor(IndexedColors.WHITE.getIndex()); // Set right border color to black
         
         return headerStyle;
+    }
+    
+    Stage stage;
+    private void displayProgress(){
+        
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("progess_dialog.fxml"));
+            fxmlLoader.setLocation(getClass().getResource("progess_dialog.fxml"));
+
+
+
+            Parent parent = fxmlLoader.load();
+
+            stage = new Stage();
+
+            /*SET FORM MOVABLE*/
+            parent.setOnMousePressed(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    xOffset = event.getSceneX();
+                    yOffset = event.getSceneY();
+                }
+            });
+            parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    stage.setX(event.getScreenX() - xOffset);
+                    stage.setY(event.getScreenY() - yOffset);
+                }
+            });
+            /*END SET FORM MOVABLE*/
+
+            Scene scene = new Scene(parent);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initStyle(StageStyle.UNDECORATED);
+            stage.setAlwaysOnTop(true);
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 }
