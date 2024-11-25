@@ -434,7 +434,7 @@ public class InventoryMovement implements GReport {
 
         excelName = "Inventory Movement - " + lsExcelDate + ".xlsx";
         if(System.getProperty("store.report.criteria.isexport").equals("true")){
-            String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "Qty-In", "Qty-Out", "End Inv", "Current Inv."};
+            String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "Qty-In", "Qty-Out", "End Inv as of " + ExcelDateThru(lsDateThru), "Current Inv."};
             exportToExcel(R1data, headers);
         }
         //Create the parameter
@@ -547,7 +547,7 @@ public class InventoryMovement implements GReport {
             ",  c.sDescript `sField03` " +
             ",  d.sDescript `sField04` " +
             ",  IFNULL(e.sDescript, '') `sField05` " +
-            ",  g.sMeasurNm `sField06` " +
+            ",  IFNULL(g.sMeasurNm, '') `sField06` " +
             ",  SUM(b.nQtyInxxx) `lField01` " +
             ",  SUM(b.nQtyOutxx) `lField02` " +
             ",  0.00 `lField03` " +
