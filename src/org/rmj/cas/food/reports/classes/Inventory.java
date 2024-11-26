@@ -391,8 +391,8 @@ public class Inventory implements GReport {
         }
 
         if (!System.getProperty("store.report.criteria.branch").equals("")) {
-            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
-//            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+            //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
+            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         } else {
             lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         }
@@ -836,20 +836,22 @@ public class Inventory implements GReport {
 
             stage = new Stage();
 
-            /*SET FORM UNMOVABLE*/
+            /*SET FORM MOVABLE*/
             parent.setOnMousePressed(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    event.consume();
+                    xOffset = event.getSceneX();
+                    yOffset = event.getSceneY();
                 }
             });
             parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    event.consume();
+                    stage.setX(event.getScreenX() - xOffset);
+                    stage.setY(event.getScreenY() - yOffset);
                 }
             });
-            /*END SET FORM UNMOVABLE*/
+            /*END SET FORM MOVABLE*/
 
             Scene scene = new Scene(parent);
             stage.initModality(Modality.APPLICATION_MODAL);
