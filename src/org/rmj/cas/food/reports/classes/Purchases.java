@@ -543,7 +543,7 @@ public class Purchases implements GReport{
                         " LEFT JOIN Client_Master g" + 
                             " ON a.sSupplier = g.sClientID" + 
                         " LEFT JOIN Branch h" +
-                            " ON a.sBranchCd = h.sBranchCd" +
+                            " ON a.sDestinat  = h.sBranchCd" +
                         ", PO_Detail b" +
                             " LEFT JOIN Inventory c" +
                                 " ON b.sStockIDx = c.sStockIDx" +
@@ -576,7 +576,7 @@ public class Purchases implements GReport{
                     " WHEN '4' THEN 'VOID'" +
                     " END `sField06`" +
             " FROM PO_Master a" + 
-                " LEFT JOIN Branch c  ON a.sBranchCd = c.sBranchCd" +
+                " LEFT JOIN Branch c  ON a.sDestinat= c.sBranchCd " +
                 " LEFT JOIN Term d ON a.sTermCode = d.sTermCode" +
                 ", Client_Master b" +
             " WHERE a.sSupplier = b.sClientID" + 
@@ -707,22 +707,20 @@ public class Purchases implements GReport{
 
             stage = new Stage();
 
-            /*SET FORM MOVABLE*/
+            /*SET FORM UNMOVABLE*/
             parent.setOnMousePressed(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    xOffset = event.getSceneX();
-                    yOffset = event.getSceneY();
+                    event.consume();
                 }
             });
             parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    stage.setX(event.getScreenX() - xOffset);
-                    stage.setY(event.getScreenY() - yOffset);
+                    event.consume();
                 }
             });
-            /*END SET FORM MOVABLE*/
+            /*END SET FORM UNMOVABLE*/
 
             Scene scene = new Scene(parent);
             stage.initModality(Modality.APPLICATION_MODAL);

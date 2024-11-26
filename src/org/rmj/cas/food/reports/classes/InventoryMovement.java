@@ -721,22 +721,20 @@ public class InventoryMovement implements GReport {
 
             stage = new Stage();
 
-            /*SET FORM MOVABLE*/
+            /*SET FORM UNMOVABLE*/
             parent.setOnMousePressed(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    xOffset = event.getSceneX();
-                    yOffset = event.getSceneY();
+                    event.consume();
                 }
             });
             parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    stage.setX(event.getScreenX() - xOffset);
-                    stage.setY(event.getScreenY() - yOffset);
+                    event.consume();
                 }
             });
-            /*END SET FORM MOVABLE*/
+            /*END SET FORM UNMOVABLE*/
 
             Scene scene = new Scene(parent);
             stage.initModality(Modality.APPLICATION_MODAL);
