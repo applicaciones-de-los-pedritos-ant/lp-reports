@@ -196,14 +196,21 @@ public class InventoryNewCriteriaController implements Initializable {
 
         return showFXDialog.jsonSearch(oApp, lsSQL, fsValue, "ID»Branch", "sBranchCd»sBranchNm", "sBranchCd»sBranchNm", 1);
     }
-
-    private JSONObject searchType(String fsValue) {
-        String lsSQL = "SELECT sInvTypCd, sDescript"
-                + " FROM Inv_Type"
-                + " WHERE cRecdStat = '1'";
-
-        return showFXDialog.jsonSearch(poGRider, lsSQL, fsValue, "ID»Type", "sInvTypCd»sDescript", "sInvTypCd»sDescript", 1);
+    private JSONObject searchType(String fsValue){
+        String lsSQL = "SELECT sInvTypCd, sDescript " +
+                        " FROM Inv_Type " +
+                        " WHERE cRecdStat = '1' ";
+        
+        return showFXDialog.jsonSearch(oApp, lsSQL, fsValue, "sInvTypCd»sDescript", "sInvTypCd»sDescript", "sInvTypCd»sDescript", 1);
     }
+    
+//    private JSONObject searchType(String fsValue) {
+//        String lsSQL = "SELECT sInvTypCd, sDescript"
+//                + " FROM Inv_Type"
+//                + " WHERE cRecdStat = '1'";
+//
+//        return showFXDialog.jsonSearch(poGRider, lsSQL, fsValue, "ID»Type", "sInvTypCd»sDescript", "sInvTypCd»sDescript", 1);
+//    }
 
     private void txtField_KeyPressed(KeyEvent event) {
         TextField txtField = (TextField) event.getSource();
@@ -287,6 +294,10 @@ public class InventoryNewCriteriaController implements Initializable {
                 case 3:
                     if (lsValue.equals("")) {
                         psBranch = "";
+                    }
+                case 4:
+                    if (lsValue.equals("")) {
+                        psInvTypCd = "";
                     }
                     break;
                 default:
