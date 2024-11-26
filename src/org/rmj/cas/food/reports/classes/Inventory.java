@@ -391,11 +391,14 @@ public class Inventory implements GReport {
         }
 
         if (!System.getProperty("store.report.criteria.branch").equals("")) {
-            //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
-            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
         } else {
             lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
         }
+        if (!System.getProperty("store.report.criteria.type").equals("")) {
+            lsCondition += " AND a.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type"));
+        } 
+        
         System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
         ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
         if(MiscUtil.RecordCount(rs)==0){
