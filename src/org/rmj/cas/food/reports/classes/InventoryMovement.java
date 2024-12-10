@@ -161,9 +161,10 @@ public class InventoryMovement implements GReport {
     }
 
     boolean bResult = false;
+
     @Override
     public boolean processReport() {
-        
+
         bResult = false;
         Task<Boolean> reportTask = new Task<Boolean>() {
             @Override
@@ -174,15 +175,15 @@ public class InventoryMovement implements GReport {
                 // Simulate long-running task
                 Thread.sleep(1000);
                 //Get the criteria as extracted from getParam()
-        //        if(System.getProperty("store.report.criteria.presentation").equals("0")){
-        //            System.setProperty("store.report.no", "1");
-        //        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
-        //            System.setProperty("store.report.no", "3");
-        //        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
-        //            System.setProperty("store.report.no", "4");
-        //        }else{
-        //            System.setProperty("store.report.no", "2");
-        //        }
+                //        if(System.getProperty("store.report.criteria.presentation").equals("0")){
+                //            System.setProperty("store.report.no", "1");
+                //        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sBinNamex")) {
+                //            System.setProperty("store.report.no", "3");
+                //        }else if(System.getProperty("store.report.criteria.group").equalsIgnoreCase("sInvTypCd")) {
+                //            System.setProperty("store.report.no", "4");
+                //        }else{
+                //            System.setProperty("store.report.no", "2");
+                //        }
                 System.setProperty("store.report.no", System.getProperty("store.report.criteria.presentation"));
 
                 //Load the jasper report to be use by this object
@@ -242,12 +243,10 @@ public class InventoryMovement implements GReport {
                     return false;
                 }
 
-                
                 closeReport();
                 return bResult;
             }
         };
-        
 
         // Handle task completion
         reportTask.setOnSucceeded(e -> {
@@ -272,85 +271,85 @@ public class InventoryMovement implements GReport {
     public void list() {
         _rptparam.forEach(item -> System.out.println(item));
     }
-    
-    private boolean printInventory() throws SQLException {
-        
-        try {
-        String lsCondition = "";
-        String lsDate = "";
-        String lsDateFrom = "";
-        String lsDateThru = "";
-        String lsBranch = "";
 
-        lsDateThru = System.getProperty("store.report.criteria.datethru");
-        if (!System.getProperty("store.report.criteria.branch").equals("")) {
-            //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
-            lsBranch = System.getProperty("store.report.criteria.branch");
-        } else {
-            lsBranch = _instance.getBranchCode();
-        }
-        System.out.println(getReportSQL(lsDateThru, lsBranch));
-        ResultSet rs = _instance.executeQuery(getReportSQL(lsDateThru, lsBranch));
-        if(MiscUtil.RecordCount(rs)==0){
-            _message = "No record found...";
-            return false;
-        }
+    private boolean printInventory() throws SQLException {
+
+        try {
+            String lsCondition = "";
+            String lsDate = "";
+            String lsDateFrom = "";
+            String lsDateThru = "";
+            String lsBranch = "";
+
+            lsDateThru = System.getProperty("store.report.criteria.datethru");
+            if (!System.getProperty("store.report.criteria.branch").equals("")) {
+                //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
+                lsBranch = System.getProperty("store.report.criteria.branch");
+            } else {
+                lsBranch = _instance.getBranchCode();
+            }
+            System.out.println(getReportSQL(lsDateThru, lsBranch));
+            ResultSet rs = _instance.executeQuery(getReportSQL(lsDateThru, lsBranch));
+            if (MiscUtil.RecordCount(rs) == 0) {
+                _message = "No record found...";
+                return false;
+            }
 //        while (!rs.next()) {
 //            _message = "No record found...";
 //            return false;
 //        }
-        //recalculate data
-        
-        ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
-        rs.beforeFirst();
-        while (rs.next()) {
-            R1data.add(new InventoryModel(
-                    rs.getObject("sField00").toString(),
-                    rs.getObject("sField01").toString(),
-                    rs.getObject("sField02").toString(),
-                    rs.getObject("sField03").toString(),
-                    rs.getObject("sField04").toString(),
-                    rs.getObject("sField05").toString(),
-                    rs.getObject("sField06").toString(),
-                    rs.getObject("lField01").toString(),
-                    rs.getObject("lField02").toString()
-            ));
-        }
+            //recalculate data
+
+            ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
+            rs.beforeFirst();
+            while (rs.next()) {
+                R1data.add(new InventoryModel(
+                        rs.getObject("sField00").toString(),
+                        rs.getObject("sField01").toString(),
+                        rs.getObject("sField02").toString(),
+                        rs.getObject("sField03").toString(),
+                        rs.getObject("sField04").toString(),
+                        rs.getObject("sField05").toString(),
+                        rs.getObject("sField06").toString(),
+                        rs.getObject("lField01").toString(),
+                        rs.getObject("lField02").toString()
+                ));
+            }
 //        rs.beforeFirst();
 //        //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
 
-        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+            JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-        excelName = "Inventory as of - " + ExcelDateThru(lsDateThru) + ".xlsx";
-            
-        if(System.getProperty("store.report.criteria.isexport").equals("true")){
-            String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "QOH", "End Inv. as of " + ExcelDateThru(lsDateThru)};
-            exportToExcel(R1data, headers);
-        }
-        //Create the parameter
-        Map<String, Object> params = new HashMap<>();
-        params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");
-        params.put("sBranchNm", _instance.getBranchName());
-        params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());
-        params.put("sReportNm", System.getProperty("store.report.header") + " as of " + CommonUtils.toDate(lsDateThru));
-        params.put("sReportDt","");
+            excelName = "Inventory as of - " + ExcelDateThru(lsDateThru) + ".xlsx";
 
-        String lsSQL = "SELECT sClientNm FROM Client_Master"
-                + " WHERE sClientID IN ("
-                + "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+            if (System.getProperty("store.report.criteria.isexport").equals("true")) {
+                String[] headers = {"Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "QOH", "End Inv. as of " + ExcelDateThru(lsDateThru)};
+                exportToExcel(R1data, headers);
+            }
+            //Create the parameter
+            Map<String, Object> params = new HashMap<>();
+            params.put("sCompnyNm", "Los Pedritos Bakeshop & Restaurant");
+            params.put("sBranchNm", _instance.getBranchName());
+            params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());
+            params.put("sReportNm", System.getProperty("store.report.header") + " as of " + CommonUtils.toDate(lsDateThru));
+            params.put("sReportDt", "");
 
-        ResultSet loRS = _instance.executeQuery(lsSQL);
+            String lsSQL = "SELECT sClientNm FROM Client_Master"
+                    + " WHERE sClientID IN ("
+                    + "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
 
-        if (loRS.next()) {
-            params.put("sPrintdBy", loRS.getString("sClientNm"));
-        } else {
-            params.put("sPrintdBy", "");
-        }
-            
+            ResultSet loRS = _instance.executeQuery(lsSQL);
+
+            if (loRS.next()) {
+                params.put("sPrintdBy", loRS.getString("sClientNm"));
+            } else {
+                params.put("sPrintdBy", "");
+            }
+
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
                     + System.getProperty("store.report.file"),
-                    params, 
+                    params,
                     jrRS);
 //            _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
 //                    + System.getProperty("store.report.file"),
@@ -358,11 +357,11 @@ public class InventoryMovement implements GReport {
 //                    jrRS);
         } catch (JRException ex) {
             Logger.getLogger(InventoryMovement.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        }
 
         return true;
     }
-    
+
     private boolean printInventoryMovement() throws SQLException {
         String lsCondition = "";
         String lsDate = "";
@@ -378,7 +377,7 @@ public class InventoryMovement implements GReport {
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
-            lsCondition +=  "b.dTransact BETWEEN " + lsDate;
+            lsCondition += "b.dTransact BETWEEN " + lsDate;
         } else {
             lsCondition = "0=1";
         }
@@ -391,7 +390,7 @@ public class InventoryMovement implements GReport {
         }
         System.out.println(MiscUtil.addCondition(getReportSQLMovement(), lsCondition));
         ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQLMovement(), lsCondition));
-        if(MiscUtil.RecordCount(rs)==0){
+        if (MiscUtil.RecordCount(rs) == 0) {
             _message = "No record found...";
             return false;
         }
@@ -400,7 +399,7 @@ public class InventoryMovement implements GReport {
 //            return false;
 //        }
         //recalculate data
-        
+
         ObservableList<InventoryModel> R1data = FXCollections.observableArrayList();
         rs.beforeFirst();
         while (rs.next()) {
@@ -418,11 +417,11 @@ public class InventoryMovement implements GReport {
                     rs.getObject("lField04").toString()
             ));
         }
-        
+
         System.out.println("R1data.size = " + R1data.size());
-        for(int lnCtr = 0; lnCtr <= R1data.size()-1; lnCtr++){
-            if(!lsDateFrom.isEmpty()){
-                String lnEndInv = (getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru) == null)?String.valueOf(R1data.get(lnCtr).getlField04()):getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString();
+        for (int lnCtr = 0; lnCtr <= R1data.size() - 1; lnCtr++) {
+            if (!lsDateFrom.isEmpty()) {
+                String lnEndInv = (getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru) == null) ? String.valueOf(R1data.get(lnCtr).getlField04()) : getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString();
                 R1data.get(lnCtr).setlField03(lnEndInv);
             }
         }
@@ -433,8 +432,8 @@ public class InventoryMovement implements GReport {
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
         excelName = "Inventory Movement - " + lsExcelDate + ".xlsx";
-        if(System.getProperty("store.report.criteria.isexport").equals("true")){
-            String[] headers = { "Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "Qty-In", "Qty-Out", "End Inv as of " + ExcelDateThru(lsDateThru), "Current Inv."};
+        if (System.getProperty("store.report.criteria.isexport").equals("true")) {
+            String[] headers = {"Branch", "Barcode", "Desciption", "Inventory Type", "Brand", "Measure", "Qty-In", "Qty-Out", "End Inv as of " + ExcelDateThru(lsDateThru), "Current Inv."};
             exportToExcel(R1data, headers);
         }
         //Create the parameter
@@ -443,7 +442,7 @@ public class InventoryMovement implements GReport {
         params.put("sBranchNm", _instance.getBranchName());
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());
         params.put("sReportNm", System.getProperty("store.report.header") + " as of " + CommonUtils.toDate(lsDateThru));
-        params.put("sReportDt","");
+        params.put("sReportDt", "");
 
         String lsSQL = "SELECT sClientNm FROM Client_Master"
                 + " WHERE sClientID IN ("
@@ -458,10 +457,10 @@ public class InventoryMovement implements GReport {
         }
 
         try {
-            
+
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
                     + System.getProperty("store.report.file"),
-                    params, 
+                    params,
                     jrRS);
 //            _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
 //                    + System.getProperty("store.report.file"),
@@ -473,8 +472,10 @@ public class InventoryMovement implements GReport {
 
         return true;
     }
+
     private Object getEndInv(String StockIDx, String date) {
-        String lsSQL = "SELECT"
+        String lsSQL;
+        lsSQL = "SELECT"
                 + " nQtyOnHnd "
                 + " FROM Inv_Ledger "
                 + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
@@ -484,22 +485,33 @@ public class InventoryMovement implements GReport {
             lsSQL = MiscUtil.addCondition(lsSQL, "sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
         }
 
-        System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date)) 
-                    + " ORDER BY nLedgerNo DESC LIMIT 1" + "\n");
-        ResultSet rsEndInv = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date)) 
-                    + " ORDER BY nLedgerNo DESC LIMIT 1");
+        System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
+                + " ORDER BY nLedgerNo DESC LIMIT 1" + "\n");
+        ResultSet rsEndInv = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
+                + " ORDER BY nLedgerNo DESC LIMIT 1");
         System.out.println(lsSQL);
         try {
-            if(!rsEndInv.next()){
-                return null;
+            if (!rsEndInv.next()) {
+                lsSQL = "SELECT"
+                        + " nQtyOnHnd "
+                        + " FROM Inventory_Master "
+                        + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                        + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+
+                ResultSet rsInventory = _instance.executeQuery(lsSQL);
+                if (!rsInventory.next()) {
+                    return null;
+                }
+                return rsInventory.getObject("nQtyOnHnd");
             }
-            System.out.println("rsEndInv == " +rsEndInv.getObject("nQtyOnHnd"));
+            System.out.println("rsEndInv == " + rsEndInv.getObject("nQtyOnHnd"));
             return rsEndInv.getObject("nQtyOnHnd");
         } catch (SQLException ex) {
             Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
     }
+
     private void closeReport() {
         _rptparam.forEach(item -> System.clearProperty((String) item));
         System.clearProperty("store.report.file");
@@ -511,70 +523,73 @@ public class InventoryMovement implements GReport {
         System.clearProperty("store.report.file");
         System.clearProperty("store.report.header");
     }
+
     private String getReportSQL(String lsDate, String lsBranchCd) {
-        String lsSQL = "SELECT a.sStockIDx `sField00` " +
-            ",	h.sBranchNm `sField01` " +
-            ",	c.sBarCodex `sField02` " +
-            ",	c.sDescript `sField03` " +
-            ",	d.sDescript `sField04` " +
-            ",	IFNULL(e.sDescript, '') `sField05` " +
-            ",	IFNULL(g.sMeasurNm, '') `sField06` " +
-            ",	a.nQtyOnHnd `lField01` " +
-            ",	IFNULL((a.nQtyOnHnd + b.nQtyOutxx) - b.nQtyInxxx, '0.00') `lField02` " +
-            "FROM Inv_Master a " +
-            "	LEFT JOIN (SELECT aa.sStockIDx, aa.sBranchCd, SUM(aa.nQtyInxxx) `nQtyInxxx`, SUM(aa.nQtyOutxx) `nQtyOutxx`  " +
-            "			FROM Inv_Ledger aa " +
-            "			WHERE aa.dTransact > " + SQLUtil.toSQL(lsDate) + 
-            "			AND aa.sBranchCd = " + SQLUtil.toSQL(lsBranchCd) + 
-            "			GROUP BY aa.sBranchCd, aa.sStockIDx) b " +
-            "		ON a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx  " +
-            "	LEFT JOIN Branch h ON a.sBranchCd = h.sBranchCd " +
-            ",	Inventory c " +
-            "		LEFT JOIN Inv_Type d ON c.sInvTypCd = d.sInvTypCd " +
-            "		LEFT JOIN Brand e ON c.sBrandCde = e.sBrandCde " +
-            "		LEFT JOIN Model f ON c.sModelCde = f.sModelCde " +
-            "		LEFT JOIN Measure g ON c.sMeasurID = g.sMeasurID " +
-            "WHERE a.sStockIDx = c.sStockIDx " +
-            " AND a.sBranchCd = " + SQLUtil.toSQL(lsBranchCd) + 
-            " AND a.cRecdStat = '1' " +
-            "  GROUP BY a.sBranchCd, a.sStockIDx";
+        String lsSQL = "SELECT a.sStockIDx `sField00` "
+                + ",	h.sBranchNm `sField01` "
+                + ",	c.sBarCodex `sField02` "
+                + ",	c.sDescript `sField03` "
+                + ",	d.sDescript `sField04` "
+                + ",	IFNULL(e.sDescript, '') `sField05` "
+                + ",	IFNULL(g.sMeasurNm, '') `sField06` "
+                + ",	a.nQtyOnHnd `lField01` "
+                + ",	IFNULL((a.nQtyOnHnd + b.nQtyOutxx) - b.nQtyInxxx, '0.00') `lField02` "
+                + "FROM Inv_Master a "
+                + "	LEFT JOIN (SELECT aa.sStockIDx, aa.sBranchCd, SUM(aa.nQtyInxxx) `nQtyInxxx`, SUM(aa.nQtyOutxx) `nQtyOutxx`  "
+                + "			FROM Inv_Ledger aa "
+                + "			WHERE aa.dTransact > " + SQLUtil.toSQL(lsDate)
+                + "			AND aa.sBranchCd = " + SQLUtil.toSQL(lsBranchCd)
+                + "			GROUP BY aa.sBranchCd, aa.sStockIDx) b "
+                + "		ON a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx  "
+                + "	LEFT JOIN Branch h ON a.sBranchCd = h.sBranchCd "
+                + ",	Inventory c "
+                + "		LEFT JOIN Inv_Type d ON c.sInvTypCd = d.sInvTypCd "
+                + "		LEFT JOIN Brand e ON c.sBrandCde = e.sBrandCde "
+                + "		LEFT JOIN Model f ON c.sModelCde = f.sModelCde "
+                + "		LEFT JOIN Measure g ON c.sMeasurID = g.sMeasurID "
+                + "WHERE a.sStockIDx = c.sStockIDx "
+                + " AND a.sBranchCd = " + SQLUtil.toSQL(lsBranchCd)
+                + " AND a.cRecdStat = '1' "
+                + "  GROUP BY a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
+
     private String getReportSQLMovement() {
-        String lsSQL = "SELECT a.sStockIDx `sField00` " +
-            ",	h.sBranchNm `sField01` " +
-            ",  c.sBarCodex `sField02` " +
-            ",  c.sDescript `sField03` " +
-            ",  d.sDescript `sField04` " +
-            ",  IFNULL(e.sDescript, '') `sField05` " +
-            ",  IFNULL(g.sMeasurNm, '') `sField06` " +
-            ",  SUM(b.nQtyInxxx) `lField01` " +
-            ",  SUM(b.nQtyOutxx) `lField02` " +
-            ",  0.00 `lField03` " +
-            ",  a.nQtyOnHnd `lField04` " +
-            "FROM Inv_Master a " +
-            "	LEFT JOIN Branch h ON a.sBranchCd = h.sBranchCd " +
-            ",  Inv_Ledger b " +
-            ",  Inventory c " +
-            "       LEFT JOIN Inv_Type d ON c.sInvTypCd = d.sInvTypCd " +
-            "       LEFT JOIN Brand e ON c.sBrandCde = e.sBrandCde " +
-            "       LEFT JOIN Model f ON c.sModelCde = f.sModelCde " +
-            "       LEFT JOIN Measure g ON c.sMeasurID = g.sMeasurID " +
-            "WHERE a.sBranchCd = b.sBranchCd " +
-            " AND a.sStockIDx = b.sStockIDx " +
-            " AND a.sStockIDx = c.sStockIDx " +
-            "  GROUP BY a.sBranchCd, a.sStockIDx";
+        String lsSQL = "SELECT a.sStockIDx `sField00` "
+                + ",	h.sBranchNm `sField01` "
+                + ",  c.sBarCodex `sField02` "
+                + ",  c.sDescript `sField03` "
+                + ",  d.sDescript `sField04` "
+                + ",  IFNULL(e.sDescript, '') `sField05` "
+                + ",  IFNULL(g.sMeasurNm, '') `sField06` "
+                + ",  SUM(b.nQtyInxxx) `lField01` "
+                + ",  SUM(b.nQtyOutxx) `lField02` "
+                + ",  0.00 `lField03` "
+                + ",  a.nQtyOnHnd `lField04` "
+                + "FROM Inv_Master a "
+                + "	LEFT JOIN Branch h ON a.sBranchCd = h.sBranchCd "
+                + ",  Inv_Ledger b "
+                + ",  Inventory c "
+                + "       LEFT JOIN Inv_Type d ON c.sInvTypCd = d.sInvTypCd "
+                + "       LEFT JOIN Brand e ON c.sBrandCde = e.sBrandCde "
+                + "       LEFT JOIN Model f ON c.sModelCde = f.sModelCde "
+                + "       LEFT JOIN Measure g ON c.sMeasurID = g.sMeasurID "
+                + "WHERE a.sBranchCd = b.sBranchCd "
+                + " AND a.sStockIDx = b.sStockIDx "
+                + " AND a.sStockIDx = c.sStockIDx "
+                + "  GROUP BY a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
-    private String ExcelDate(String lsDateFrom, String lsDateThru){
-        
+
+    private String ExcelDate(String lsDateFrom, String lsDateThru) {
+
         try {
-         // Parse the date string to a Date object
+            // Parse the date string to a Date object
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
             Date dateFrom, dateThru;
             dateFrom = inputFormat.parse(lsDateFrom);
             dateThru = inputFormat.parse(lsDateThru);
-            
+
             // Define the desired output format
             SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
 
@@ -588,16 +603,15 @@ public class InventoryMovement implements GReport {
         }
 
     }
-    
-    
-    private String ExcelDateThru(String lsDateThru){
-        
+
+    private String ExcelDateThru(String lsDateThru) {
+
         try {
-         // Parse the date string to a Date object
+            // Parse the date string to a Date object
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
             Date dateThru;
             dateThru = inputFormat.parse(lsDateThru);
-            
+
             // Define the desired output format
             SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
 
@@ -609,33 +623,33 @@ public class InventoryMovement implements GReport {
         }
 
     }
-    
+
     public static void exportToExcel(ObservableList<InventoryModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Inventory Data");
-        
+
         // Create header row
         Row headerRow = sheet.createRow(0);
-        
+
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(getHeaderCellStyle(workbook));
         }
-        
+
         System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
-        
+
         headerRow.setHeightInPoints(20);
-        
+
         // Create a CellStyle with double format (e.g., two decimal places)
         CellStyle doubleStyle = workbook.createCellStyle();
-        DataFormat format  = workbook.createDataFormat();
+        DataFormat format = workbook.createDataFormat();
         doubleStyle.setDataFormat(format.getFormat("#,##0.00")); // Adjust format as needed
         // Populate data rows
         int rowIndex = 1;
         for (InventoryModel item : data) {
             Row row = sheet.createRow(rowIndex++);
-            
+
             row.createCell(0).setCellValue(item.getsField01());
             row.createCell(1).setCellValue(item.getsField02());
             row.createCell(2).setCellValue(item.getsField03());
@@ -644,10 +658,10 @@ public class InventoryMovement implements GReport {
             row.createCell(5).setCellValue(item.getsField06());
             row.createCell(6).setCellValue(item.getlField01());
             row.createCell(7).setCellValue(item.getlField02());
-            
+
             row.getCell(6).setCellStyle(doubleStyle);
             row.getCell(7).setCellStyle(doubleStyle);
-            if(System.getProperty("store.report.criteria.presentation").equals("2")){
+            if (System.getProperty("store.report.criteria.presentation").equals("2")) {
                 row.createCell(8).setCellValue(item.getlField03());
                 row.createCell(9).setCellValue(item.getlField04());
 
@@ -678,20 +692,20 @@ public class InventoryMovement implements GReport {
             }
         }
     }
-  
+
     private static CellStyle getHeaderCellStyle(Workbook workbook) {
         CellStyle headerStyle = workbook.createCellStyle();
-        
+
         // Set background color
         headerStyle.setFillForegroundColor(IndexedColors.OLIVE_GREEN.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        
+
         Font font = workbook.createFont();
         font.setBold(true);
         font.setColor(IndexedColors.WHITE.getIndex());
         font.setFontHeightInPoints((short) 12);
         headerStyle.setFont(font);
-        
+
         // Set center alignment
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -704,18 +718,17 @@ public class InventoryMovement implements GReport {
         headerStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex()); // Set left border color to black
         headerStyle.setBorderRight(BorderStyle.THIN);
         headerStyle.setRightBorderColor(IndexedColors.WHITE.getIndex()); // Set right border color to black
-        
+
         return headerStyle;
     }
-    
+
     Stage stage;
-    private void displayProgress(){
-        
+
+    private void displayProgress() {
+
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("progess_dialog.fxml"));
             fxmlLoader.setLocation(getClass().getResource("progess_dialog.fxml"));
-
-
 
             Parent parent = fxmlLoader.load();
 
