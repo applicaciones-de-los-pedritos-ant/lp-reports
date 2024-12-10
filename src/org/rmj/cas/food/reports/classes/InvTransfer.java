@@ -493,7 +493,7 @@ public class InvTransfer implements GReport {
                 + " AND a.cTranStat NOT IN('0','3')"
                 + " ORDER BY a.sDestinat, a.sTransNox, b.nEntryNox";
 
-        if (_instance.getUserLevel() >= UserRight.ENGINEER) {
+        if (_instance.getUserLevel() >= UserRight.SUPERVISOR) {
             if (!System.getProperty("store.report.criteria.branch").isEmpty()) {
                 lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
             }
@@ -533,7 +533,7 @@ public class InvTransfer implements GReport {
                 + " GROUP BY a.sTransNox"
                 + " ORDER BY a.sDestinat, a.sTransNox, b.nEntryNox";
 
-        if (_instance.getUserLevel() >= UserRight.ENGINEER) {
+        if (_instance.getUserLevel() >= UserRight.SUPERVISOR) {
             if (!System.getProperty("store.report.criteria.branch").isEmpty()) {
                 lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
             }
