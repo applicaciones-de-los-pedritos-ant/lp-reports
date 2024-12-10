@@ -499,7 +499,7 @@ public class InventoryMovement implements GReport {
                         + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
                 ResultSet rsInventory = _instance.executeQuery(lsSQL);
-                if (!rsEndInv.next()) {
+                if (!rsInventory.next()) {
                     return null;
                 }
                 return rsInventory.getObject("nQtyOnHnd");
