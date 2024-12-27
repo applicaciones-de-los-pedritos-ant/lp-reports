@@ -475,26 +475,39 @@ public class InventoryMovement implements GReport {
 
     private Object getEndInv(String StockIDx, String date) {
         String lsSQL;
-        lsSQL = "SELECT"
-                + " nQtyOnHnd "
-                + " FROM Inv_Ledger "
-                + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
-                + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+//        lsSQL = "SELECT"
+//                + " nQtyOnHnd "
+//                + " FROM Inv_Ledger "
+//                + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
+//                + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+
+           lsSQL = "SELECT a.sStockIDx" 
+                  + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
+                  + " From Inv_Master a" 
+                  + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
+                  + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                  + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
         }
 
         System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
-                + " ORDER BY nLedgerNo DESC LIMIT 1" + "\n");
+                + " ORDER BY b.nLedgerNo DESC LIMIT 1" + "\n");
         ResultSet rsEndInv = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
-                + " ORDER BY nLedgerNo DESC LIMIT 1");
+                + " ORDER BY b.nLedgerNo DESC LIMIT 1");
         System.out.println(lsSQL);
         try {
             if (!rsEndInv.next()) {
-                lsSQL = "SELECT"
-                        + " nQtyOnHnd "
-                        + " FROM Inventory_Master "
+//                lsSQL = "SELECT"
+//                        + " nQtyOnHnd "
+//                        + " FROM Inventory_Master "
+//                        + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
+//                        + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                 lsSQL = "SELECT a.sStockIDx" 
+                        + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
+                        + " From Inv_Master a" 
+                        + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
                         + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
                         + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
@@ -533,7 +546,7 @@ public class InventoryMovement implements GReport {
                 + ",	IFNULL(e.sDescript, '') `sField05` "
                 + ",	IFNULL(g.sMeasurNm, '') `sField06` "
                 + ",	a.nQtyOnHnd `lField01` "
-                + ",	IFNULL((a.nQtyOnHnd + b.nQtyOutxx) - b.nQtyInxxx, '0.00') `lField02` "
+                + ",	IFNULL((a.nQtyOnHnd + Ifnull(b.nQtyOutxx,0)) - Ifnull(b.nQtyInxxx,0), '0.00') `lField02` "
                 + "FROM Inv_Master a "
                 + "	LEFT JOIN (SELECT aa.sStockIDx, aa.sBranchCd, SUM(aa.nQtyInxxx) `nQtyInxxx`, SUM(aa.nQtyOutxx) `nQtyOutxx`  "
                 + "			FROM Inv_Ledger aa "

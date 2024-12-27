@@ -415,7 +415,7 @@ public class PurchaseReceiving implements GReport {
                 + ") GROUP BY a.sTransNox"
                 + " ORDER BY e.sBranchNm,a.sTransNox,d.nEntryNox ";
 
-        if (_instance.getUserLevel() < UserRight.ENGINEER) {
+        if (_instance.getUserLevel() < UserRight.SUPERVISOR) {
             lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
         }
 
