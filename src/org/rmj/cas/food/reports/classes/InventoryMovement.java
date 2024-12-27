@@ -482,11 +482,11 @@ public class InventoryMovement implements GReport {
 //                + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
            lsSQL = "SELECT a.sStockIDx" 
-                  + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
+                  + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
                   + " From Inv_Master a" 
                   + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
-                  + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
-                  + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                  + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                  + " AND b.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
