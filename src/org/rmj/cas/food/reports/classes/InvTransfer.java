@@ -284,7 +284,7 @@ public class InvTransfer implements GReport {
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
             lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
-                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru") + " 23:59:59");
 
             lsCondition = "a.dTransact BETWEEN " + lsDate;
         } else {
@@ -359,7 +359,7 @@ public class InvTransfer implements GReport {
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
             lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
-                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru")  + " 23:59:59");
 
             lsCondition = "a.dTransact BETWEEN " + lsDate;
         } else {
@@ -693,23 +693,23 @@ public class InvTransfer implements GReport {
             Parent parent = fxmlLoader.load();
 
             stage = new Stage();
-
-            /*SET FORM MOVABLE*/
-            parent.setOnMousePressed(new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    xOffset = event.getSceneX();
-                    yOffset = event.getSceneY();
-                }
-            });
-            parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    stage.setX(event.getScreenX() - xOffset);
-                    stage.setY(event.getScreenY() - yOffset);
-                }
-            });
-            /*END SET FORM MOVABLE*/
+//
+//            /*SET FORM MOVABLE*/
+//            parent.setOnMousePressed(new EventHandler<MouseEvent>() {
+//                @Override
+//                public void handle(MouseEvent event) {
+//                    xOffset = event.getSceneX();
+//                    yOffset = event.getSceneY();
+//                }
+//            });
+//            parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
+//                @Override
+//                public void handle(MouseEvent event) {
+//                    stage.setX(event.getScreenX() - xOffset);
+//                    stage.setY(event.getScreenY() - yOffset);
+//                }
+//            });
+//            /*END SET FORM MOVABLE*/
 
             Scene scene = new Scene(parent);
             stage.initModality(Modality.APPLICATION_MODAL);
