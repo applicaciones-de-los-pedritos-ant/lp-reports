@@ -375,7 +375,7 @@ public class InventoryMovement implements GReport {
             lsDateThru = System.getProperty("store.report.criteria.datethru");
             lsExcelDate = ExcelDate(lsDateFrom, lsDateThru);
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
-                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru")  + " 23:59:59" );
 
             lsCondition += "b.dTransact BETWEEN " + lsDate;
         } else {
@@ -482,11 +482,11 @@ public class InventoryMovement implements GReport {
 //                + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
            lsSQL = "SELECT a.sStockIDx" 
-                  + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
+                  + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
                   + " From Inv_Master a" 
                   + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
-                  + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
-                  + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                  + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                  + " AND b.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
@@ -747,22 +747,22 @@ public class InventoryMovement implements GReport {
 
             stage = new Stage();
 
-            /*SET FORM MOVABLE*/
-            parent.setOnMousePressed(new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    xOffset = event.getSceneX();
-                    yOffset = event.getSceneY();
-                }
-            });
-            parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    stage.setX(event.getScreenX() - xOffset);
-                    stage.setY(event.getScreenY() - yOffset);
-                }
-            });
-            /*END SET FORM MOVABLE*/
+//            /*SET FORM MOVABLE*/
+//            parent.setOnMousePressed(new EventHandler<MouseEvent>() {
+//                @Override
+//                public void handle(MouseEvent event) {
+//                    xOffset = event.getSceneX();
+//                    yOffset = event.getSceneY();
+//                }
+//            });
+//            parent.setOnMouseDragged(new EventHandler<MouseEvent>() {
+//                @Override
+//                public void handle(MouseEvent event) {
+//                    stage.setX(event.getScreenX() - xOffset);
+//                    stage.setY(event.getScreenY() - yOffset);
+//                }
+//            });
+//            /*END SET FORM MOVABLE*/
 
             Scene scene = new Scene(parent);
             stage.initModality(Modality.APPLICATION_MODAL);
