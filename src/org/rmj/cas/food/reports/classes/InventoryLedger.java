@@ -320,7 +320,7 @@ public class InventoryLedger implements GReport {
 
             JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-            excelName = "Inventory Ledger as of - " + ExcelDateThru(lsDateThru) + ".xlsx";
+            excelName = "Inventory Ledger as of - "+System.getProperty("store.report.criteria.branch").toUpperCase()+", " + ExcelDateThru(lsDateThru) +", " +CommonUtils.xsDateShort(_instance.getSysDate()) + ".xlsx";
 
             if (System.getProperty("store.report.criteria.isexport").equals("true")) {
                 String[] headers = {"Original Branch", "Source / Destination", "Barcode", "Description", "Brand", "Model", "Measure", "Source No.", "Source", "Date", "Qty. In", "Qty. Out", "QOH"};
@@ -462,7 +462,7 @@ public class InventoryLedger implements GReport {
 
     public static void exportToExcel(ObservableList<InventoryModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Inventory Data");
+        Sheet sheet = workbook.createSheet("Inventory Ledger Data");
 
         // Create header row
         Row headerRow = sheet.createRow(0);
@@ -500,8 +500,9 @@ public class InventoryLedger implements GReport {
             row.createCell(11).setCellValue(item.getlField02());
             row.createCell(12).setCellValue(item.getlField03());
 
-            row.getCell(6).setCellStyle(doubleStyle);
-            row.getCell(7).setCellStyle(doubleStyle);
+            row.getCell(10).setCellStyle(doubleStyle);
+            row.getCell(11).setCellStyle(doubleStyle);
+            row.getCell(12).setCellStyle(doubleStyle);
 
         }
 
