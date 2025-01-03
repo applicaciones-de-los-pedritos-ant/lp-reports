@@ -492,8 +492,13 @@ public class InventoryLedger implements GReport {
             row.createCell(3).setCellValue(item.getsField04());
             row.createCell(4).setCellValue(item.getsField05());
             row.createCell(5).setCellValue(item.getsField06());
-            row.createCell(6).setCellValue(item.getlField01());
-            row.createCell(7).setCellValue(item.getlField02());
+            row.createCell(6).setCellValue(item.getsField07());
+            row.createCell(7).setCellValue(item.getsField08());
+            row.createCell(8).setCellValue(item.getsField09());
+            row.createCell(9).setCellValue(item.getsField10());
+            row.createCell(10).setCellValue(item.getlField01());
+            row.createCell(11).setCellValue(item.getlField02());
+            row.createCell(12).setCellValue(item.getlField03());
 
             row.getCell(6).setCellStyle(doubleStyle);
             row.getCell(7).setCellStyle(doubleStyle);
