@@ -66,7 +66,6 @@ import org.rmj.appdriver.SQLUtil;
 import org.rmj.appdriver.agentfx.ShowMessageFX;
 import org.rmj.appdriver.constants.UserRight;
 import org.rmj.appdriver.iface.GReport;
-import static org.rmj.cas.food.reports.classes.Inventory.filePath;
 import org.rmj.replication.utility.LogWrapper;
 
 public class Purchases implements GReport{
@@ -651,10 +650,33 @@ public class Purchases implements GReport{
             System.out.println("sheet width = " + sheet.getColumnWidth(i));
         }
 
-        // Write to Excel file
-        try (FileOutputStream fileOut = new FileOutputStream(filePath + excelName)) {
+        // Ensure the directory exists
+        File directory = new File(filePath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // Generate a unique file name if the file already exists
+        String fileFullPath = filePath + excelName;
+        File file = new File(fileFullPath);
+        int count = 1;
+
+        while (file.exists()) {
+            String baseName = excelName.contains(".")
+                    ? excelName.substring(0, excelName.lastIndexOf("."))
+                    : excelName;
+            String extension = excelName.contains(".")
+                    ? excelName.substring(excelName.lastIndexOf("."))
+                    : "";
+            fileFullPath = filePath + baseName + "-" + count + extension;
+            file = new File(fileFullPath);
+            count++;
+        }
+
+        // Write to the Excel file
+        try (FileOutputStream fileOut = new FileOutputStream(fileFullPath)) {
             workbook.write(fileOut);
-            System.out.println("Exported to Excel successfully.");
+            System.out.println("Exported to Excel successfully: " + fileFullPath);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -665,6 +687,7 @@ public class Purchases implements GReport{
             }
         }
     }
+
   
     private static CellStyle getHeaderCellStyle(Workbook workbook) {
         CellStyle headerStyle = workbook.createCellStyle();
