@@ -320,7 +320,7 @@ public class InventoryLedger implements GReport {
 
             JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-            excelName = "Inventory Ledger as of - "+System.getProperty("store.report.criteria.branch").toUpperCase()+", " + ExcelDateThru(lsDateThru) +", " +CommonUtils.xsDateShort(_instance.getSysDate()) + ".xlsx";
+            excelName = "Inventory Ledger as of - "+System.getProperty("store.report.criteria.branch").toUpperCase()+", " + ExcelDateThru(lsDateThru) + ".xlsx";
 
             if (System.getProperty("store.report.criteria.isexport").equals("true")) {
                 String[] headers = {"Original Branch", "Source / Destination", "Barcode", "Description", "Brand", "Model", "Measure", "Source No.", "Source", "Date", "Qty. In", "Qty. Out", "QOH"};
