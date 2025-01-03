@@ -3,22 +3,27 @@ package org.rmj.cas.food.reports.classes;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-public class InventoryModel {  
+public class InventoryModel {
+
     private SimpleStringProperty sField00;
-    private SimpleStringProperty sField01;        
-    private SimpleStringProperty sField02;       
-    private SimpleStringProperty sField03;     
-    private SimpleStringProperty sField04;     
-    private SimpleStringProperty sField05;  
+    private SimpleStringProperty sField01;
+    private SimpleStringProperty sField02;
+    private SimpleStringProperty sField03;
+    private SimpleStringProperty sField04;
+    private SimpleStringProperty sField05;
     private SimpleStringProperty sField06;
-    private SimpleDoubleProperty lField01;    
-    private SimpleDoubleProperty lField02;     
+    private SimpleStringProperty sField07;
+    private SimpleStringProperty sField08;
+    private SimpleStringProperty sField09;
+    private SimpleStringProperty sField10;
+    private SimpleDoubleProperty lField01;
+    private SimpleDoubleProperty lField02;
     private SimpleDoubleProperty lField03;
     private SimpleDoubleProperty lField04;
     private SimpleDoubleProperty lField05;
-    
+
     InventoryModel(String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08, String index09, String index10, String index11, String index12){
+            String index06, String index07, String index08, String index09, String index10, String index11, String index12) {
         this.sField00 = new SimpleStringProperty(index01);
         this.sField01 = new SimpleStringProperty(index02);
         this.sField02 = new SimpleStringProperty(index03);
@@ -32,11 +37,12 @@ public class InventoryModel {
         this.lField05 = new SimpleDoubleProperty(Double.parseDouble(index11));
         this.sField06 = new SimpleStringProperty(index12);
     }
+
     /*
     *Model for Inventory presentation
-    */
-    InventoryModel(String index00,String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08){
+     */
+    InventoryModel(String index00, String index01, String index02, String index03, String index04, String index05,
+            String index06, String index07, String index08) {
         this.sField00 = new SimpleStringProperty(index00);
         this.sField01 = new SimpleStringProperty(index01);
         this.sField02 = new SimpleStringProperty(index02);
@@ -47,11 +53,12 @@ public class InventoryModel {
         this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index07));
         this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index08));
     }
+
     /*
     *Model for Inventory movement
-    */
-    InventoryModel(String index00,String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08, String index09, String index10){
+     */
+    InventoryModel(String index00, String index01, String index02, String index03, String index04, String index05,
+            String index06, String index07, String index08, String index09, String index10) {
         this.sField00 = new SimpleStringProperty(index00);
         this.sField01 = new SimpleStringProperty(index01);
         this.sField02 = new SimpleStringProperty(index02);
@@ -64,6 +71,28 @@ public class InventoryModel {
         this.lField03 = new SimpleDoubleProperty(Double.parseDouble(index09));
         this.lField04 = new SimpleDoubleProperty(Double.parseDouble(index10));
     }
+
+    /*
+    *Model for Inventory Ledger
+     */
+    InventoryModel(String index01, String index02, String index03, String index04, String index05,
+            String index06, String index07, String index08, String index09, String index10,
+            String dIndex01,String dIndex02,String dIndex03) {
+        this.sField01 = new SimpleStringProperty(index01);
+        this.sField02 = new SimpleStringProperty(index02);
+        this.sField03 = new SimpleStringProperty(index03);
+        this.sField04 = new SimpleStringProperty(index04);
+        this.sField05 = new SimpleStringProperty(index05);
+        this.sField06 = new SimpleStringProperty(index06);
+        this.sField07 = new SimpleStringProperty(index07);
+        this.sField08 = new SimpleStringProperty(index08);
+        this.sField09 = new SimpleStringProperty(index09);
+        this.sField10 = new SimpleStringProperty(index10);
+        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(dIndex01));
+        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(dIndex02));
+        this.lField03 = new SimpleDoubleProperty(Double.parseDouble(dIndex03));
+    }
+
     public String getsField00() {
         return sField00.get();
     }
@@ -112,6 +141,46 @@ public class InventoryModel {
         this.sField05.set(sField05);
     }
 
+    public String getsField06() {
+        return sField06.get();
+    }
+
+    public void setsField06(String sField06) {
+        this.sField06.set(sField06);;
+    }
+
+    public String getsField07() {
+        return sField07.get();
+    }
+
+    public void setsField07(String sField07) {
+        this.sField07.set(sField07);;
+    }
+
+    public String getsField08() {
+        return sField08.get();
+    }
+
+    public void setsField08(String sField08) {
+        this.sField08.set(sField08);;
+    }
+
+    public String getsField09() {
+        return sField09.get();
+    }
+
+    public void setsField09(String sField09) {
+        this.sField09.set(sField09);;
+    }
+
+    public String getsField10() {
+        return sField10.get();
+    }
+
+    public void setsField10(String sField10) {
+        this.sField10.set(sField10);;
+    }
+
     public Double getlField01() {
         return lField01.get();
     }
@@ -151,11 +220,5 @@ public class InventoryModel {
     public void setlField05(String lField05) {
         this.lField05.set(Double.parseDouble(lField05));
     }
-      public String getsField06() {
-        return sField06.get();
-    }
 
-    public void setsField06(String sField06) {
-        this.sField06.set(sField06); ;
-    }
 }
