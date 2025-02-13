@@ -6,6 +6,11 @@
  */
 package org.rmj.cas.food.reports.classes;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -158,11 +163,12 @@ public class InvTransfer implements GReport {
         }
         return false;
     }
-    
+
     boolean bResult = false;
+
     @Override
     public boolean processReport() {
-        
+
         bResult = false;
         Task<Boolean> reportTask = new Task<Boolean>() {
             @Override
@@ -223,6 +229,13 @@ public class InvTransfer implements GReport {
                         logReport();
                     }
                     JasperViewer jv = new JasperViewer(_jrprint, false);
+                    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
+                    Rectangle screenBounds = defaultScreen.getDefaultConfiguration().getBounds();
+                    Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(defaultScreen.getDefaultConfiguration());
+                    int adjustedHeight = screenBounds.height - screenInsets.bottom;
+                    Rectangle adjustedBounds = new Rectangle(screenBounds.x, screenBounds.y, screenBounds.width, adjustedHeight);
+                    jv.setBounds(adjustedBounds);
                     jv.setVisible(true);
                     jv.setAlwaysOnTop(bResult);
 
@@ -239,13 +252,10 @@ public class InvTransfer implements GReport {
                     return false;
                 }
 
-
-                
                 closeReport();
                 return bResult;
             }
         };
-        
 
         // Handle task completion
         reportTask.setOnSucceeded(e -> {
@@ -306,7 +316,7 @@ public class InvTransfer implements GReport {
         R1data.clear();
         rs.beforeFirst();
         while (rs.next()) {
-            R1data.add(new InvTransferModel(    
+            R1data.add(new InvTransferModel(
                     rs.getObject("sField01").toString(),
                     rs.getObject("sField02").toString(),
                     rs.getObject("sField03").toString(),
@@ -319,13 +329,12 @@ public class InvTransfer implements GReport {
         //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
-        
+
         excelName = "Inventory Transfer Summary - " + lsExcelDate + ".xlsx";
-        if(System.getProperty("store.report.criteria.isexport").equals("true")){
-            String[] headers = { "Origin", "Destination", "Date", "Trans. No.", "TTL Qty", "TTL Amount", "Status"};
+        if (System.getProperty("store.report.criteria.isexport").equals("true")) {
+            String[] headers = {"Origin", "Destination", "Date", "Trans. No.", "TTL Qty", "TTL Amount", "Status"};
             exportToExcel(R1data, headers);
         }
-
 
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -357,7 +366,7 @@ public class InvTransfer implements GReport {
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
             lsExcelDate = ExcelDate(System.getProperty("store.report.criteria.datefrom"), System.getProperty("store.report.criteria.datethru"));
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
-                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru")  + " 23:59:59");
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru") + " 23:59:59");
 
             lsCondition = "a.dTransact BETWEEN " + lsDate;
         } else {
@@ -400,11 +409,11 @@ public class InvTransfer implements GReport {
         //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
-        
+
         excelName = "Inventory Transfer Detail - " + lsExcelDate + ".xlsx";
-        if(System.getProperty("store.report.criteria.isexport").equals("true")){
-            String[] headers = { "Origin", "Destination", "Trans. No.", "Date", "Inv. Tp", "Barcode", "Description",
-                    "Brand", "Measure", "Qty", "Cost", "Total", "Status", "D. Modified"};
+        if (System.getProperty("store.report.criteria.isexport").equals("true")) {
+            String[] headers = {"Origin", "Destination", "Trans. No.", "Date", "Inv. Tp", "Barcode", "Description",
+                "Brand", "Measure", "Qty", "Cost", "Total", "Status", "D. Modified"};
             exportToExcel(R1data, headers);
         }
 
@@ -545,15 +554,16 @@ public class InvTransfer implements GReport {
 //        System.out.println (lsSQL);
         return lsSQL;
     }
-    private String ExcelDate(String lsDateFrom, String lsDateThru){
-        
+
+    private String ExcelDate(String lsDateFrom, String lsDateThru) {
+
         try {
-         // Parse the date string to a Date object
+            // Parse the date string to a Date object
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
             Date dateFrom, dateThru;
             dateFrom = inputFormat.parse(lsDateFrom);
             dateThru = inputFormat.parse(lsDateThru);
-            
+
             // Define the desired output format
             SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
 
@@ -567,34 +577,35 @@ public class InvTransfer implements GReport {
         }
 
     }
+
     public void exportToExcel(ObservableList<InvTransferModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Inventory Transfer Data");
 
         // Create header row
         Row headerRow = sheet.createRow(0);
-        
+
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(getHeaderCellStyle(workbook));
         }
-        
+
         System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
-        
+
         headerRow.setHeightInPoints(20);
-        
+
         // Create a CellStyle with double format (e.g., two decimal places)
         CellStyle doubleStyle = workbook.createCellStyle();
-        DataFormat format  = workbook.createDataFormat();
+        DataFormat format = workbook.createDataFormat();
         doubleStyle.setDataFormat(format.getFormat("#,##0.00")); // Adjust format as needed
 
         // Populate data rows
         int rowIndex = 1;
         for (InvTransferModel item : data) {
             Row row = sheet.createRow(rowIndex++);
-            
-            if(System.getProperty("store.report.criteria.presentation").equals("1")){
+
+            if (System.getProperty("store.report.criteria.presentation").equals("1")) {
                 row.createCell(0).setCellValue(item.getsField10());
                 row.createCell(1).setCellValue(item.getsField01());
                 row.createCell(2).setCellValue(item.getsField02());
@@ -613,7 +624,7 @@ public class InvTransfer implements GReport {
                 row.getCell(9).setCellStyle(doubleStyle);
                 row.getCell(10).setCellStyle(doubleStyle);
                 row.getCell(11).setCellStyle(doubleStyle);
-            }else{
+            } else {
                 row.createCell(0).setCellValue(item.getsField01());
                 row.createCell(1).setCellValue(item.getsField02());
                 row.createCell(2).setCellValue(item.getsField03());
@@ -621,11 +632,11 @@ public class InvTransfer implements GReport {
                 row.createCell(4).setCellValue(item.getlField01());
                 row.createCell(5).setCellValue(item.getlField02());
                 row.createCell(6).setCellValue(item.getsField05());
-                
+
                 row.getCell(4).setCellStyle(doubleStyle);
                 row.getCell(5).setCellStyle(doubleStyle);
             }
-            
+
         }
 
         // Auto-size columns
@@ -676,17 +687,17 @@ public class InvTransfer implements GReport {
 
     private static CellStyle getHeaderCellStyle(Workbook workbook) {
         CellStyle headerStyle = workbook.createCellStyle();
-        
+
         // Set background color
         headerStyle.setFillForegroundColor(IndexedColors.OLIVE_GREEN.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        
+
         Font font = workbook.createFont();
         font.setBold(true);
         font.setColor(IndexedColors.WHITE.getIndex());
         font.setFontHeightInPoints((short) 12);
         headerStyle.setFont(font);
-        
+
         // Set center alignment
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -699,17 +710,16 @@ public class InvTransfer implements GReport {
         headerStyle.setLeftBorderColor(IndexedColors.WHITE.getIndex()); // Set left border color to black
         headerStyle.setBorderRight(BorderStyle.THIN);
         headerStyle.setRightBorderColor(IndexedColors.WHITE.getIndex()); // Set right border color to black
-        
+
         return headerStyle;
     }
     Stage stage;
-    private void displayProgress(){
-        
+
+    private void displayProgress() {
+
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("progess_dialog.fxml"));
             fxmlLoader.setLocation(getClass().getResource("progess_dialog.fxml"));
-
-
 
             Parent parent = fxmlLoader.load();
 
