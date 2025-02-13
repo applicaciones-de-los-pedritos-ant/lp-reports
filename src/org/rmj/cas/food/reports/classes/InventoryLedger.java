@@ -6,6 +6,12 @@
  */
 package org.rmj.cas.food.reports.classes;
 
+import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,10 +30,12 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import net.sf.jasperreports.engine.JRException;
@@ -206,6 +214,14 @@ public class InventoryLedger implements GReport {
                         logReport();
                     }
                     JasperViewer jv = new JasperViewer(_jrprint, false);
+                    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
+                    Rectangle screenBounds = defaultScreen.getDefaultConfiguration().getBounds();
+                    Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(defaultScreen.getDefaultConfiguration());
+                    int adjustedHeight = screenBounds.height - screenInsets.bottom;
+                    Rectangle adjustedBounds = new Rectangle(screenBounds.x, screenBounds.y, screenBounds.width, adjustedHeight);
+                    jv.setBounds(adjustedBounds);
+//                    jv.setLocation(0, 0);
                     jv.setVisible(true);
                     jv.setAlwaysOnTop(bResult);
 
@@ -264,7 +280,7 @@ public class InventoryLedger implements GReport {
             if (!System.getProperty("store.report.criteria.datefrom").equals("")
                     && !System.getProperty("store.report.criteria.datethru").equals("")) {
                 lsDateFrom = System.getProperty("store.report.criteria.datefrom");
-                lsDateThru = System.getProperty("store.report.criteria.datethru") ;
+                lsDateThru = System.getProperty("store.report.criteria.datethru");
                 lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                         + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -321,7 +337,7 @@ public class InventoryLedger implements GReport {
 
             JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-            excelName = "Inventory Ledger as of - "+System.getProperty("store.report.criteria.branch").toUpperCase()+", " + ExcelDateThru(lsDateThru) +".xlsx";
+            excelName = "Inventory Ledger as of - " + System.getProperty("store.report.criteria.branch").toUpperCase() + ", " + ExcelDateThru(lsDateThru) + ".xlsx";
 
             if (System.getProperty("store.report.criteria.isexport").equals("true")) {
                 String[] headers = {"Original Branch", "Source / Destination", "Barcode", "Description", "Brand", "Model", "Measure", "Source No.", "Source", "Date", "Qty. In", "Qty. Out", "QOH"};
@@ -515,7 +531,7 @@ public class InventoryLedger implements GReport {
             System.out.println("sheet width = " + sheet.getColumnWidth(i));
         }
 
-         // Ensure the directory exists
+        // Ensure the directory exists
         File directory = new File(filePath);
         if (!directory.exists()) {
             directory.mkdirs();

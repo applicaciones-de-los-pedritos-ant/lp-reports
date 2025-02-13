@@ -6,6 +6,11 @@
  */
 package org.rmj.cas.food.reports.classes;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -225,6 +230,13 @@ public class InventoryMovement implements GReport {
                         logReport();
                     }
                     JasperViewer jv = new JasperViewer(_jrprint, false);
+                    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
+                    Rectangle screenBounds = defaultScreen.getDefaultConfiguration().getBounds();
+                    Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(defaultScreen.getDefaultConfiguration());
+                    int adjustedHeight = screenBounds.height - screenInsets.bottom;
+                    Rectangle adjustedBounds = new Rectangle(screenBounds.x, screenBounds.y, screenBounds.width, adjustedHeight);
+                    jv.setBounds(adjustedBounds);
                     jv.setVisible(true);
                     jv.setAlwaysOnTop(bResult);
 
@@ -373,7 +385,7 @@ public class InventoryMovement implements GReport {
             lsDateThru = System.getProperty("store.report.criteria.datethru");
             lsExcelDate = ExcelDate(lsDateFrom, lsDateThru);
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
-                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru")  + " 23:59:59" );
+                    + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru") + " 23:59:59");
 
             lsCondition += "b.dTransact BETWEEN " + lsDate;
         } else {
@@ -479,12 +491,12 @@ public class InventoryMovement implements GReport {
 //                + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
 //                + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
-           lsSQL = "SELECT a.sStockIDx" 
-                  + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
-                  + " From Inv_Master a" 
-                  + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
-                  + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx)
-                  + " AND b.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+        lsSQL = "SELECT a.sStockIDx"
+                + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`"
+                + " From Inv_Master a"
+                + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
+                + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                + " AND b.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
@@ -502,9 +514,9 @@ public class InventoryMovement implements GReport {
 //                        + " FROM Inventory_Master "
 //                        + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
 //                        + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
-                 lsSQL = "SELECT a.sStockIDx" 
-                        + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`" 
-                        + " From Inv_Master a" 
+                lsSQL = "SELECT a.sStockIDx"
+                        + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`"
+                        + " From Inv_Master a"
                         + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
                         + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
                         + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
@@ -689,7 +701,7 @@ public class InventoryMovement implements GReport {
             System.out.println("sheet width = " + sheet.getColumnWidth(i));
         }
 
-         // Ensure the directory exists
+        // Ensure the directory exists
         File directory = new File(filePath);
         if (!directory.exists()) {
             directory.mkdirs();
@@ -726,7 +738,6 @@ public class InventoryMovement implements GReport {
             }
         }
     }
-  
 
     private static CellStyle getHeaderCellStyle(Workbook workbook) {
         CellStyle headerStyle = workbook.createCellStyle();
@@ -785,7 +796,6 @@ public class InventoryMovement implements GReport {
 //                }
 //            });
 //            /*END SET FORM MOVABLE*/
-
             Scene scene = new Scene(parent);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initStyle(StageStyle.UNDECORATED);
