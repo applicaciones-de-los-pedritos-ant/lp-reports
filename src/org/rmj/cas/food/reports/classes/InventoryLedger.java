@@ -6,6 +6,7 @@
  */
 package org.rmj.cas.food.reports.classes;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -263,7 +264,7 @@ public class InventoryLedger implements GReport {
             if (!System.getProperty("store.report.criteria.datefrom").equals("")
                     && !System.getProperty("store.report.criteria.datethru").equals("")) {
                 lsDateFrom = System.getProperty("store.report.criteria.datefrom");
-                lsDateThru = System.getProperty("store.report.criteria.datethru");
+                lsDateThru = System.getProperty("store.report.criteria.datethru") ;
                 lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                         + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -320,7 +321,7 @@ public class InventoryLedger implements GReport {
 
             JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-            excelName = "Inventory Ledger as of - " + ExcelDateThru(lsDateThru) + ".xlsx";
+            excelName = "Inventory Ledger as of - "+System.getProperty("store.report.criteria.branch").toUpperCase()+", " + ExcelDateThru(lsDateThru) +".xlsx";
 
             if (System.getProperty("store.report.criteria.isexport").equals("true")) {
                 String[] headers = {"Original Branch", "Source / Destination", "Barcode", "Description", "Brand", "Model", "Measure", "Source No.", "Source", "Date", "Qty. In", "Qty. Out", "QOH"};
@@ -462,7 +463,7 @@ public class InventoryLedger implements GReport {
 
     public static void exportToExcel(ObservableList<InventoryModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Inventory Data");
+        Sheet sheet = workbook.createSheet("Inventory Ledger Data");
 
         // Create header row
         Row headerRow = sheet.createRow(0);
@@ -492,11 +493,17 @@ public class InventoryLedger implements GReport {
             row.createCell(3).setCellValue(item.getsField04());
             row.createCell(4).setCellValue(item.getsField05());
             row.createCell(5).setCellValue(item.getsField06());
-            row.createCell(6).setCellValue(item.getlField01());
-            row.createCell(7).setCellValue(item.getlField02());
+            row.createCell(6).setCellValue(item.getsField07());
+            row.createCell(7).setCellValue(item.getsField08());
+            row.createCell(8).setCellValue(item.getsField09());
+            row.createCell(9).setCellValue(item.getsField10());
+            row.createCell(10).setCellValue(item.getlField01());
+            row.createCell(11).setCellValue(item.getlField02());
+            row.createCell(12).setCellValue(item.getlField03());
 
-            row.getCell(6).setCellStyle(doubleStyle);
-            row.getCell(7).setCellStyle(doubleStyle);
+            row.getCell(10).setCellStyle(doubleStyle);
+            row.getCell(11).setCellStyle(doubleStyle);
+            row.getCell(12).setCellStyle(doubleStyle);
 
         }
 
@@ -508,10 +515,33 @@ public class InventoryLedger implements GReport {
             System.out.println("sheet width = " + sheet.getColumnWidth(i));
         }
 
-        // Write to Excel file
-        try (FileOutputStream fileOut = new FileOutputStream(filePath + excelName)) {
+         // Ensure the directory exists
+        File directory = new File(filePath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // Generate a unique file name if the file already exists
+        String fileFullPath = filePath + excelName;
+        File file = new File(fileFullPath);
+        int count = 1;
+
+        while (file.exists()) {
+            String baseName = excelName.contains(".")
+                    ? excelName.substring(0, excelName.lastIndexOf("."))
+                    : excelName;
+            String extension = excelName.contains(".")
+                    ? excelName.substring(excelName.lastIndexOf("."))
+                    : "";
+            fileFullPath = filePath + baseName + "-" + count + extension;
+            file = new File(fileFullPath);
+            count++;
+        }
+
+        // Write to the Excel file
+        try (FileOutputStream fileOut = new FileOutputStream(fileFullPath)) {
             workbook.write(fileOut);
-            System.out.println("Exported to Excel successfully.");
+            System.out.println("Exported to Excel successfully: " + fileFullPath);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
