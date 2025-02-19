@@ -515,7 +515,7 @@ public class InventoryMovement implements GReport {
 //                        + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
 //                        + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
                 lsSQL = "SELECT a.sStockIDx"
-                        + ",	Ifnull(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`"
+                        + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`"
                         + " From Inv_Master a"
                         + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
                         + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
@@ -549,10 +549,10 @@ public class InventoryMovement implements GReport {
 
     private String getReportSQL(String lsDate, String lsBranchCd) {
         String lsSQL = "SELECT a.sStockIDx `sField00` "
-                + ",	h.sBranchNm `sField01` "
+                + ",	IFNULL(h.sBranchNm,'') `sField01` "
                 + ",	c.sBarCodex `sField02` "
-                + ",	c.sDescript `sField03` "
-                + ",	d.sDescript `sField04` "
+                + ",	IFNULL(c.sDescript,'') `sField03` "
+                + ",	IFNULL(d.sDescript,'') `sField04` "
                 + ",	IFNULL(e.sDescript, '') `sField05` "
                 + ",	IFNULL(g.sMeasurNm, '') `sField06` "
                 + ",	a.nQtyOnHnd `lField01` "
@@ -579,10 +579,10 @@ public class InventoryMovement implements GReport {
 
     private String getReportSQLMovement() {
         String lsSQL = "SELECT a.sStockIDx `sField00` "
-                + ",	h.sBranchNm `sField01` "
+                + ",	IFNULL(h.sBranchNm,'') `sField01` "
                 + ",  c.sBarCodex `sField02` "
-                + ",  c.sDescript `sField03` "
-                + ",  d.sDescript `sField04` "
+                + ",  IFNULL(c.sDescript,'') `sField03` "
+                + ",  IFNULL(d.sDescript,'') `sField04` "
                 + ",  IFNULL(e.sDescript, '') `sField05` "
                 + ",  IFNULL(g.sMeasurNm, '') `sField06` "
                 + ",  SUM(b.nQtyInxxx) `lField01` "

@@ -221,7 +221,6 @@ public class InventoryLedger implements GReport {
                     int adjustedHeight = screenBounds.height - screenInsets.bottom;
                     Rectangle adjustedBounds = new Rectangle(screenBounds.x, screenBounds.y, screenBounds.width, adjustedHeight);
                     jv.setBounds(adjustedBounds);
-//                    jv.setLocation(0, 0);
                     jv.setVisible(true);
                     jv.setAlwaysOnTop(bResult);
 
@@ -253,7 +252,7 @@ public class InventoryLedger implements GReport {
             stage.close();
             System.out.println("Report failed to load");
 //            progressIndicator.setVisible(false);
-//            System.err.println("Failed to load the report: " + reportTask.getException().getMessage());
+            System.err.println("Failed to load the report: " + reportTask.getException().getMessage());
         });
 
         // Run the task in a background thread
@@ -328,14 +327,16 @@ public class InventoryLedger implements GReport {
                         rs.getObject("sField10").toString(),
                         rs.getObject("lField01").toString(),
                         rs.getObject("lField02").toString(),
-                        rs.getObject("lField03").toString()
-                ));
+                        rs.getObject("lField03").toString()));
             }
 //        rs.beforeFirst();
 //        //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
-
-            JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+//            if (R1data.isEmpty()) {
+//                System.out.println("No data to print.");
+//                return false;
+//            }
+//            JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
             excelName = "Inventory Ledger as of - " + System.getProperty("store.report.criteria.branch").toUpperCase() + ", " + ExcelDateThru(lsDateThru) + ".xlsx";
 
@@ -392,11 +393,11 @@ public class InventoryLedger implements GReport {
 
     private String getReportSQL() {
         String lsSQL = "SELECT"
-                + " e.sBranchNm sField01"
+                + " IFNULL(e.sBranchNm,'') sField01"
                 + " , CASE a.sSourceCd "
-                + " WHEN 'Dlvr' THEN d.sBranchNm "
-                + " WHEN 'AcDl' THEN f.sBranchNm "
-                + " ELSE e.sBranchNm "
+                + " WHEN 'Dlvr' THEN IFNULL(d.sBranchNm,'') "
+                + " WHEN 'AcDl' THEN IFNULL(f.sBranchNm,'') "
+                + " ELSE IFNULL(e.sBranchNm,'') "
                 + " END sField02 "
                 + ", h.sBarCodex sField03"
                 + ", h.sDescript sField04"
@@ -404,11 +405,11 @@ public class InventoryLedger implements GReport {
                 + ", IFNULL(j.sDescript,'') sField06"
                 + ", IFNULL(k.sMeasurNm,'') sField07"
                 + ", a.sSourceNo sField08"
-                + ", b.sDescript sField09"
+                + ", IFNULL(b.sDescript,a.sSourceCd) sField09 "
                 + ", a.dTransact sField10"
-                + ", a.nQtyInxxx lField01"
-                + ", a.nQtyOutxx lField02"
-                + ", a.nQtyOnHnd lField03"
+                + ", IFNull(a.nQtyInxxx,0) lField01"
+                + ", IFNull(a.nQtyOutxx,0) lField02"
+                + ", IFNull(a.nQtyOnHnd,0) lField03"
                 + " FROM Inv_Ledger a"
                 + " LEFT JOIN xxxSource_Transaction b"
                 + " ON a.sSourceCd = b.sSourceCd  "
