@@ -463,8 +463,8 @@ public class InvTransfer implements GReport {
 
     private String getReportSQL() {
         String lsSQL = "SELECT"
-                + "  i.sBranchNm `sField10`"
-                + ", g.sBranchNm `sField01`"
+                + "  IFNULL(i.sBranchNm,'') `sField10`"
+                + ", IFNULL(g.sBranchNm,'') `sField01`"
                 + ", a.sTransNox `sField02`"
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`"
                 + ", h.sDescript `sField04`"
@@ -517,8 +517,8 @@ public class InvTransfer implements GReport {
 
     private String getReportSQLSummary() {
         String lsSQL = "SELECT"
-                + "  e.sBranchNm `sField01`"
-                + ", d.sBranchNm `sField02`"
+                + "  IFNULL(e.sBranchNm,'') `sField01`"
+                + ", IFNULL(d.sBranchNm,'') `sField02`"
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`"
                 + ", a.sTransNox `sField04`"
                 + ", SUM(b.nQuantity)  `lField01`"
