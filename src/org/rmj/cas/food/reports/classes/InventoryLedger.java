@@ -331,7 +331,7 @@ public class InventoryLedger implements GReport {
             }
 //        rs.beforeFirst();
 //        //Convert the data-source to JasperReport data-source
-        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
 //            if (R1data.isEmpty()) {
 //                System.out.println("No data to print.");
 //                return false;
@@ -393,14 +393,14 @@ public class InventoryLedger implements GReport {
 
     private String getReportSQL() {
         String lsSQL = "SELECT"
-                + " IFNULL(e.sBranchNm,'') sField01"
+                + " IFNULL(e.sBranchNm,IFNULL(l.sBranchNm,'')) sField01"
                 + " , CASE a.sSourceCd "
                 + " WHEN 'Dlvr' THEN IFNULL(d.sBranchNm,'') "
                 + " WHEN 'AcDl' THEN IFNULL(f.sBranchNm,'') "
-                + " ELSE IFNULL(e.sBranchNm,'') "
+                + " ELSE IFNULL(e.sBranchNm, IFNULL(l.sBranchNm,'')) "
                 + " END sField02 "
-                + ", h.sBarCodex sField03"
-                + ", h.sDescript sField04"
+                + ", IFNULL(h.sBarCodex,IFNULL(a.sStockIDx,'')) sField03"
+                + ", IFNULL(h.sDescript,'') sField04"
                 + ", IFNULL(i.sDescript,'') sField05"
                 + ", IFNULL(j.sDescript,'') sField06"
                 + ", IFNULL(k.sMeasurNm,'') sField07"
@@ -423,6 +423,8 @@ public class InventoryLedger implements GReport {
                 + " ON LEFT(g.sTransNox,4) = f.sBranchCd"
                 + " LEFT JOIN Branch e"
                 + " ON LEFT(a.sSourceNo,4) = e.sBranchCd"
+                + " LEFT JOIN Branch l"
+                + " ON a.sBranchCd = l.sBranchCd"
                 + " LEFT JOIN Inventory h"
                 + " ON a.sStockIDx =  h.sStockIDx"
                 + " LEFT JOIN Brand i"
