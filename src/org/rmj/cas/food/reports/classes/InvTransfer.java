@@ -463,7 +463,7 @@ public class InvTransfer implements GReport {
 
     private String getReportSQL() {
         String lsSQL = "SELECT"
-                + "  IFNULL(i.sBranchNm,'') `sField10`"
+                + "  IFNULL(i.sBranchNm,'j.sBranchNm') `sField10`"
                 + ", IFNULL(g.sBranchNm,'') `sField01`"
                 + ", a.sTransNox `sField02`"
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`"
@@ -487,6 +487,8 @@ public class InvTransfer implements GReport {
                 + " ON LEFT(a.sTransNox, 4) = i.sBranchCd"
                 + " LEFT JOIN Branch g"
                 + " ON a.sDestinat = g.sBranchCd"
+                + " LEFT JOIN Branch j"
+                + " ON a.sBranchCd = j.sBranchCd"
                 + ", Inv_Transfer_Detail b"
                 + " LEFT JOIN Inventory c"
                 + " ON b.sStockIDx = c.sStockIDx"
