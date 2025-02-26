@@ -48,7 +48,7 @@ public class InventoryNewCriteriaController implements Initializable {
     @FXML
     private FontAwesomeIconView glyphExit;
     @FXML
-    private TextField txtField03,txtField04;
+    private TextField txtField03, txtField04;
     @FXML
     private CheckBox checkbox01;
 
@@ -93,6 +93,7 @@ public class InventoryNewCriteriaController implements Initializable {
     public String getInvType() {
         return psInvTypCd;
     }
+
     public boolean isExport() {
         return pbExport;
     }
@@ -129,15 +130,18 @@ public class InventoryNewCriteriaController implements Initializable {
         boolean isChecked = checkbox01.isSelected();
         pbExport = isChecked;
     }
+
     private void loadRecord() {
         txtField01.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField02.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField03.setText("");
 
-        if (!oApp.isMainOffice() && !oApp.isWarehouse()
-                && oApp.getUserLevel() < UserRight.SUPERVISOR) {
-            txtField03.setText(oApp.getBranchName());
-            txtField03.setDisable(!oApp.isMainOffice() && !oApp.isWarehouse());
+// && oApp.getUserLevel() < UserRight.SUPERVISOR
+        if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
+            if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
+                txtField03.setText(oApp.getBranchName());
+                txtField03.setDisable(!oApp.isMainOffice() && !oApp.isWarehouse());
+            }
         }
     }
 
@@ -197,14 +201,15 @@ public class InventoryNewCriteriaController implements Initializable {
 
         return showFXDialog.jsonSearch(oApp, lsSQL, fsValue, "ID»Branch", "sBranchCd»sBranchNm", "sBranchCd»sBranchNm", 1);
     }
-    private JSONObject searchType(String fsValue){
-        String lsSQL = "SELECT sInvTypCd, sDescript " +
-                        " FROM Inv_Type " +
-                        " WHERE cRecdStat = '1' ";
-        
+
+    private JSONObject searchType(String fsValue) {
+        String lsSQL = "SELECT sInvTypCd, sDescript "
+                + " FROM Inv_Type "
+                + " WHERE cRecdStat = '1' ";
+
         return showFXDialog.jsonSearch(oApp, lsSQL, fsValue, "sInvTypCd»sDescript", "sInvTypCd»sDescript", "sInvTypCd»sDescript", 1);
     }
-    
+
 //    private JSONObject searchType(String fsValue) {
 //        String lsSQL = "SELECT sInvTypCd, sDescript"
 //                + " FROM Inv_Type"
@@ -212,7 +217,6 @@ public class InventoryNewCriteriaController implements Initializable {
 //
 //        return showFXDialog.jsonSearch(poGRider, lsSQL, fsValue, "ID»Type", "sInvTypCd»sDescript", "sInvTypCd»sDescript", 1);
 //    }
-
     private void txtField_KeyPressed(KeyEvent event) {
         TextField txtField = (TextField) event.getSource();
         int lnIndex = Integer.parseInt(txtField.getId().substring(8, 10));

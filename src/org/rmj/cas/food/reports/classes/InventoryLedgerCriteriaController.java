@@ -158,9 +158,8 @@ public class InventoryLedgerCriteriaController implements Initializable {
         txtField03.setText("");
         txtField04.setText("");
         txtField05.setText("");
-
-        if (!oApp.isMainOffice() && !oApp.isWarehouse()
-                && oApp.getUserLevel() < UserRight.SUPERVISOR) {
+// && oApp.getUserLevel() < UserRight.SUPERVISOR
+        if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
             txtField03.setText(oApp.getBranchName());
             txtField03.setDisable(!oApp.isMainOffice() && !oApp.isWarehouse());
         }
