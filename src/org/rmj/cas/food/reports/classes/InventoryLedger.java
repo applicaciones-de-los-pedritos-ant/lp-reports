@@ -331,7 +331,7 @@ public class InventoryLedger implements GReport {
             }
 //        rs.beforeFirst();
 //        //Convert the data-source to JasperReport data-source
-            JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
+        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 //            if (R1data.isEmpty()) {
 //                System.out.println("No data to print.");
 //                return false;
