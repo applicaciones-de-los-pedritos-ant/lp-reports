@@ -288,11 +288,12 @@ public class InventoryLedger implements GReport {
             } else {
                 lsCondition = "0=1";
             }
-
             if (!System.getProperty("store.report.criteria.branch").equals("")) {
                 lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
             } else {
-                lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                if (!_instance.isMainOffice() && !_instance.isWarehouse()) {
+                    lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                }
             }
 
             if (!System.getProperty("store.report.criteria.stock").equals("")) {
@@ -331,7 +332,7 @@ public class InventoryLedger implements GReport {
             }
 //        rs.beforeFirst();
 //        //Convert the data-source to JasperReport data-source
-        JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+            JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 //            if (R1data.isEmpty()) {
 //                System.out.println("No data to print.");
 //                return false;

@@ -176,6 +176,7 @@ public class PurchaseReceivingCriteriaController implements Initializable {
 
         if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
             txtField04.setText(oApp.getBranchName());
+            txtField04.setDisable(!oApp.isMainOffice() && !oApp.isWarehouse());
         }
 
         radioBtn02.setSelected(true);
