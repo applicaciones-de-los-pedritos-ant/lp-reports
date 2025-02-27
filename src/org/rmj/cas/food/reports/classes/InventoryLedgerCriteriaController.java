@@ -158,10 +158,10 @@ public class InventoryLedgerCriteriaController implements Initializable {
         txtField03.setText("");
         txtField04.setText("");
         txtField05.setText("");
-
-        if (!oApp.isMainOffice() && !oApp.isWarehouse()
-                && oApp.getUserLevel() < UserRight.SUPERVISOR) {
+// && oApp.getUserLevel() < UserRight.SUPERVISOR
+        if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
             txtField03.setText(oApp.getBranchName());
+            txtField03.setDisable(!oApp.isMainOffice() && !oApp.isWarehouse());
         }
 
     }
@@ -179,10 +179,10 @@ public class InventoryLedgerCriteriaController implements Initializable {
             case "btnOk":
                 try {
                 btnOk.requestFocus();
-                if (psBranch.isEmpty()) {
-                    ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid branch.");
-                    return;
-                }
+//                if (psBranch.isEmpty()) {
+//                    ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid branch.");
+//                    return;
+//                }
                 if (CommonUtils.isDate(txtField01.getText(), pxeDateFormat)) {
                     psDateFrom = SQLUtil.dateFormat(SQLUtil.toDate(txtField01.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
                 } else {

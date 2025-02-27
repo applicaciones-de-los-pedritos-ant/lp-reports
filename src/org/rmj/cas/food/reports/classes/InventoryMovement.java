@@ -292,11 +292,14 @@ public class InventoryMovement implements GReport {
             String lsBranch = "";
 
             lsDateThru = System.getProperty("store.report.criteria.datethru");
+
             if (!System.getProperty("store.report.criteria.branch").equals("")) {
                 //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
                 lsBranch = System.getProperty("store.report.criteria.branch");
             } else {
-                lsBranch = _instance.getBranchCode();
+                if (!_instance.isMainOffice() && !_instance.isWarehouse()) {
+                    lsBranch = _instance.getBranchCode();
+                }
             }
             System.out.println(getReportSQL(lsDateThru, lsBranch));
             ResultSet rs = _instance.executeQuery(getReportSQL(lsDateThru, lsBranch));

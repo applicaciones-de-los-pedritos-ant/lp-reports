@@ -108,14 +108,17 @@ public class InventoryMovementCriteriaController implements Initializable {
     public String Presentation() {
         return psPresentation;
     }
+
     public String getInvType() {
         return psInvTypCd;
     }
+
     public boolean isExport() {
         return pbExport;
     }
 
     ToggleGroup tgPresentation;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         btnExit.setOnAction(this::cmdButton_Click);
@@ -129,7 +132,7 @@ public class InventoryMovementCriteriaController implements Initializable {
         txtField01.focusedProperty().addListener(txtField_Focus);
         txtField02.focusedProperty().addListener(txtField_Focus);
         txtField03.focusedProperty().addListener(txtField_Focus);
-        
+
         radioBtn01.setOnAction(this::radioButton_Click);
         radioBtn02.setOnAction(this::radioButton_Click);
 
@@ -152,22 +155,24 @@ public class InventoryMovementCriteriaController implements Initializable {
         boolean isChecked = checkbox01.isSelected();
         pbExport = isChecked;
     }
+
     private void loadRecord() {
         txtField01.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField02.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField03.setText("");
 
-        if (!oApp.isMainOffice() && !oApp.isWarehouse()
-                && oApp.getUserLevel() < UserRight.SUPERVISOR) {
-            txtField03.setText(oApp.getBranchName());
+// && oApp.getUserLevel() < UserRight.SUPERVISOR
+        if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
+            if (!oApp.isMainOffice() && !oApp.isWarehouse()) {
+                txtField03.setText(oApp.getBranchName());
+                txtField03.setDisable(!oApp.isMainOffice() && !oApp.isWarehouse());
+            }
         }
-        
-
         radioBtn01.setSelected(true);
         psPresentation = "1";
-        if(psPresentation.equals("1")){
+        if (psPresentation.equals("1")) {
             txtField01.setEditable(false);
-        }else{
+        } else {
             txtField01.setEditable(true);
         }
     }
@@ -175,6 +180,7 @@ public class InventoryMovementCriteriaController implements Initializable {
     private Stage getStage() {
         return (Stage) btnOk.getScene().getWindow();
     }
+
     private void radioButton_Click(ActionEvent event) {
         String lsRadio = ((RadioButton) event.getSource()).getId();
         switch (lsRadio) {
@@ -198,40 +204,40 @@ public class InventoryMovementCriteriaController implements Initializable {
                 break;
             case "btnOk":
                 try {
-                    btnOk.requestFocus();
-                    if(psBranch.isEmpty()){
-                        ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid branch.");
-                        return;
-                    }
-                    if (CommonUtils.isDate(txtField01.getText(), pxeDateFormat)) {
-                        psDateFrom = SQLUtil.dateFormat(SQLUtil.toDate(txtField01.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
-                    } else {
-                        psDateFrom = CommonUtils.xsDateShort(txtField01.getText());
-                    }
-
-                    if (CommonUtils.isDate(txtField02.getText(), pxeDateFormat)) {
-                        psDateThru = SQLUtil.dateFormat(SQLUtil.toDate(txtField02.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
-                    } else {
-                        psDateThru = CommonUtils.xsDateShort(txtField02.getText());
-                    }
-                } catch (ParseException e) {
-                    ShowMessageFX.Error(getStage(), e.getMessage(), InventoryNewCriteriaController.class.getSimpleName(), "Please inform MIS Department.");
-                    //System.exit(1);
+                btnOk.requestFocus();
+//                    if(psBranch.isEmpty()){
+//                        ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid branch.");
+//                        return;
+//                    }
+                if (CommonUtils.isDate(txtField01.getText(), pxeDateFormat)) {
+                    psDateFrom = SQLUtil.dateFormat(SQLUtil.toDate(txtField01.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
+                } else {
+                    psDateFrom = CommonUtils.xsDateShort(txtField01.getText());
                 }
-                if(Presentation().equals("2")){  
-                    if (psDateFrom.compareTo(psDateThru) > 0) {
-                        ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid date range.");
-                        return;
-                    }
-                } else{
-                    if (psDateThru.isEmpty()) {
-                        ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid date thru.");
-                        return;
-                    }
-                } 
 
-                pbCancelled = false;
-                break;
+                if (CommonUtils.isDate(txtField02.getText(), pxeDateFormat)) {
+                    psDateThru = SQLUtil.dateFormat(SQLUtil.toDate(txtField02.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
+                } else {
+                    psDateThru = CommonUtils.xsDateShort(txtField02.getText());
+                }
+            } catch (ParseException e) {
+                ShowMessageFX.Error(getStage(), e.getMessage(), InventoryNewCriteriaController.class.getSimpleName(), "Please inform MIS Department.");
+                //System.exit(1);
+            }
+            if (Presentation().equals("2")) {
+                if (psDateFrom.compareTo(psDateThru) > 0) {
+                    ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid date range.");
+                    return;
+                }
+            } else {
+                if (psDateThru.isEmpty()) {
+                    ShowMessageFX.Warning(getStage(), "Please verify your entry and try again.!", pxeModuleName, "Invalid date thru.");
+                    return;
+                }
+            }
+
+            pbCancelled = false;
+            break;
             case "btnExit":
                 pbCancelled = true;
                 break;
@@ -248,7 +254,6 @@ public class InventoryMovementCriteriaController implements Initializable {
 
         return showFXDialog.jsonSearch(oApp, lsSQL, fsValue, "ID»Branch", "sBranchCd»sBranchNm", "sBranchCd»sBranchNm", 1);
     }
-
 
     private void txtField_KeyPressed(KeyEvent event) {
         TextField txtField = (TextField) event.getSource();
@@ -268,7 +273,7 @@ public class InventoryMovementCriteriaController implements Initializable {
                     txtField03.setText("");
                 }
             }
-        } 
+        }
 
         switch (event.getCode()) {
             case DOWN:
