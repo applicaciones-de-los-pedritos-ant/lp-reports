@@ -432,7 +432,7 @@ public class InventoryLedger implements GReport {
                 + " ON h.sModelCde =  j.sModelCde"
                 + " LEFT JOIN Measure k"
                 + " ON h.sMeasurID =  k.sMeasurID"
-                + " ORDER BY a.dTransact ASC, a.nLedgerNo ASC";
+                + " ORDER BY  sField01,sField03,a.dTransact ASC, a.nLedgerNo ASC";
         return lsSQL;
     }
 

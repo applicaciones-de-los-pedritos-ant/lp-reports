@@ -590,7 +590,7 @@ public class Inventory implements GReport {
                 + " LEFT JOIN Measure f ON b.sMeasurID = f.sMeasurID"
                 + " WHERE a.sStockIDx = b.sStockIDx"
                 + " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
-                + " GROUP BY  a.sBranchCd, b.sStockIDx ";
+                + " GROUP BY  sField06,sField02,a.sBranchCd, b.sStockIDx ";
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "b.sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
