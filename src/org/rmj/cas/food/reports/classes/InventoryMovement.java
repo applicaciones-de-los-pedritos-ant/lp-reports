@@ -324,8 +324,8 @@ public class InventoryMovement implements GReport {
                         rs.getObject("sField04").toString(),
                         rs.getObject("sField05").toString(),
                         rs.getObject("sField06").toString(),
-                        rs.getObject("lField01").toString(),
-                        rs.getObject("lField02").toString()
+                        rs.getDouble("lField01"),
+                        rs.getDouble("lField02")
                 ));
             }
 //        rs.beforeFirst();
@@ -399,7 +399,9 @@ public class InventoryMovement implements GReport {
             //lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
             lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch"));
         } else {
-            lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+            if (!_instance.isMainOffice() && !_instance.isWarehouse()) {
+                lsCondition += " AND a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+            }
         }
         System.out.println(MiscUtil.addCondition(getReportSQLMovement(), lsCondition));
         ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQLMovement(), lsCondition));
@@ -424,17 +426,20 @@ public class InventoryMovement implements GReport {
                     rs.getObject("sField04").toString(),
                     rs.getObject("sField05").toString(),
                     rs.getObject("sField06").toString(),
-                    rs.getObject("lField01").toString(),
-                    rs.getObject("lField02").toString(),
-                    rs.getObject("lField03").toString(),
-                    rs.getObject("lField04").toString()
+                    rs.getDouble("lField01"),
+                    rs.getDouble("lField02"),
+                    rs.getDouble("lField03"),
+                    rs.getDouble("lField04")
             ));
         }
 
         System.out.println("R1data.size = " + R1data.size());
         for (int lnCtr = 0; lnCtr <= R1data.size() - 1; lnCtr++) {
             if (!lsDateFrom.isEmpty()) {
-                String lnEndInv = (getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru) == null) ? String.valueOf(R1data.get(lnCtr).getlField04()) : getEndInv(R1data.get(lnCtr).getsField00(), lsDateThru).toString();
+                String lnEndInv = (getEndInv(R1data.get(lnCtr).getsField00(),
+                        lsDateThru, R1data.get(lnCtr).getsField06()) == null) ? String.valueOf(R1data.get(lnCtr).getlField04())
+                        : getEndInv(R1data.get(lnCtr).getsField00(),
+                                lsDateThru, R1data.get(lnCtr).getsField06()).toString();
                 R1data.get(lnCtr).setlField03(lnEndInv);
             }
         }
@@ -486,7 +491,7 @@ public class InventoryMovement implements GReport {
         return true;
     }
 
-    private Object getEndInv(String StockIDx, String date) {
+    private Object getEndInv(String StockIDx, String date, String fsBranch) {
         String lsSQL;
 //        lsSQL = "SELECT"
 //                + " nQtyOnHnd "
@@ -498,18 +503,23 @@ public class InventoryMovement implements GReport {
                 + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`"
                 + " From Inv_Master a"
                 + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
-                + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx)
-                + " AND b.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx);
 
+        if (!fsBranch.isEmpty()) {
+            lsSQL = lsSQL + " AND b.sBranchCd = " + SQLUtil.toSQL(fsBranch);
+        } else {
+            lsSQL = lsSQL + " AND b.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+
+        }
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "sInvTypCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.type")));
         }
 
-        System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
-                + " ORDER BY b.nLedgerNo DESC LIMIT 1" + "\n");
+//        System.out.println("\n" + MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
+//                + " ORDER BY b.nLedgerNo DESC LIMIT 1" + "\n");
         ResultSet rsEndInv = _instance.executeQuery(MiscUtil.addCondition(lsSQL, "dTransact <= " + SQLUtil.toSQL(date))
                 + " ORDER BY b.nLedgerNo DESC LIMIT 1");
-        System.out.println(lsSQL);
+//        System.out.println(lsSQL);
         try {
             if (!rsEndInv.next()) {
 //                lsSQL = "SELECT"
@@ -521,8 +531,8 @@ public class InventoryMovement implements GReport {
                         + ",	IFNULL(b.nQtyOnHnd, a.nQtyOnHnd) `nQtyOnHnd`"
                         + " From Inv_Master a"
                         + " left JOIN Inv_Ledger b on a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx"
-                        + " WHERE sStockIDx = " + SQLUtil.toSQL(StockIDx)
-                        + " AND sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode());
+                        + " WHERE a.sStockIDx = " + SQLUtil.toSQL(StockIDx)
+                        + " AND a.sBranchCd = " + SQLUtil.toSQL(fsBranch);
 
                 ResultSet rsInventory = _instance.executeQuery(lsSQL);
                 if (!rsInventory.next()) {
@@ -530,7 +540,7 @@ public class InventoryMovement implements GReport {
                 }
                 return rsInventory.getObject("nQtyOnHnd");
             }
-            System.out.println("rsEndInv == " + rsEndInv.getObject("nQtyOnHnd"));
+//            System.out.println("rsEndInv == " + rsEndInv.getObject("nQtyOnHnd"));
             return rsEndInv.getObject("nQtyOnHnd");
         } catch (SQLException ex) {
             Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
@@ -563,9 +573,11 @@ public class InventoryMovement implements GReport {
                 + "FROM Inv_Master a "
                 + "	LEFT JOIN (SELECT aa.sStockIDx, aa.sBranchCd, SUM(aa.nQtyInxxx) `nQtyInxxx`, SUM(aa.nQtyOutxx) `nQtyOutxx`  "
                 + "			FROM Inv_Ledger aa "
-                + "			WHERE aa.dTransact > " + SQLUtil.toSQL(lsDate)
-                + "			AND aa.sBranchCd = " + SQLUtil.toSQL(lsBranchCd)
-                + "			GROUP BY aa.sBranchCd, aa.sStockIDx) b "
+                + "			WHERE aa.dTransact > " + SQLUtil.toSQL(lsDate);
+        if (!lsBranchCd.isEmpty()) {
+            lsSQL = lsSQL + "			AND aa.sBranchCd = " + SQLUtil.toSQL(lsBranchCd);
+        }
+        lsSQL = lsSQL + "			GROUP BY aa.sBranchCd, aa.sStockIDx) b "
                 + "		ON a.sBranchCd = b.sBranchCd AND a.sStockIDx = b.sStockIDx  "
                 + "	LEFT JOIN Branch h ON a.sBranchCd = h.sBranchCd "
                 + ",	Inventory c "
@@ -573,9 +585,11 @@ public class InventoryMovement implements GReport {
                 + "		LEFT JOIN Brand e ON c.sBrandCde = e.sBrandCde "
                 + "		LEFT JOIN Model f ON c.sModelCde = f.sModelCde "
                 + "		LEFT JOIN Measure g ON c.sMeasurID = g.sMeasurID "
-                + "WHERE a.sStockIDx = c.sStockIDx "
-                + " AND a.sBranchCd = " + SQLUtil.toSQL(lsBranchCd)
-                + " AND a.cRecdStat = '1' "
+                + "WHERE a.sStockIDx = c.sStockIDx ";
+        if (!lsBranchCd.isEmpty()) {
+            lsSQL = lsSQL + " AND a.sBranchCd = " + SQLUtil.toSQL(lsBranchCd);
+        }
+        lsSQL = lsSQL + " AND a.cRecdStat = '1' "
                 + "  GROUP BY a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
@@ -588,6 +602,7 @@ public class InventoryMovement implements GReport {
                 + ",  IFNULL(d.sDescript,'') `sField04` "
                 + ",  IFNULL(e.sDescript, '') `sField05` "
                 + ",  IFNULL(g.sMeasurNm, '') `sField06` "
+                + ",  IFNULL(h.sBranchCd,'') `sField07` "
                 + ",  SUM(b.nQtyInxxx) `lField01` "
                 + ",  SUM(b.nQtyOutxx) `lField02` "
                 + ",  0.00 `lField03` "

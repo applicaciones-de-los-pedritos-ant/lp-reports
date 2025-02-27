@@ -22,75 +22,93 @@ public class InventoryModel {
     private SimpleDoubleProperty lField04;
     private SimpleDoubleProperty lField05;
 
-    InventoryModel(String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08, String index09, String index10, String index11, String index12) {
-        this.sField00 = new SimpleStringProperty(index01);
-        this.sField01 = new SimpleStringProperty(index02);
-        this.sField02 = new SimpleStringProperty(index03);
-        this.sField03 = new SimpleStringProperty(index04);
-        this.sField04 = new SimpleStringProperty(index05);
-        this.sField05 = new SimpleStringProperty(index06);
-        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index07));
-        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index08));
-        this.lField03 = new SimpleDoubleProperty(Double.parseDouble(index09));
-        this.lField04 = new SimpleDoubleProperty(Double.parseDouble(index10));
-        this.lField05 = new SimpleDoubleProperty(Double.parseDouble(index11));
-        this.sField06 = new SimpleStringProperty(index12);
+    InventoryModel(String sindex00, String sindex01, String sindex02, String sindex03, String sindex04, String sindex05,
+            String sindex06, Double dindex07, Double dindex08, Double dindex09, Double dindex10) {
+        this.sField00 = new SimpleStringProperty(sindex00);
+        this.sField01 = new SimpleStringProperty(sindex01);
+        this.sField02 = new SimpleStringProperty(sindex02);
+        this.sField03 = new SimpleStringProperty(sindex03);
+        this.sField04 = new SimpleStringProperty(sindex04);
+        this.sField05 = new SimpleStringProperty(sindex05);
+        this.sField06 = new SimpleStringProperty(sindex06);
+        this.lField01 = new SimpleDoubleProperty(dindex07);
+        this.lField02 = new SimpleDoubleProperty(dindex08);
+        this.lField03 = new SimpleDoubleProperty(dindex09);
+        this.lField04 = new SimpleDoubleProperty(dindex10);
+    }
+
+    InventoryModel(String sindex00, String sindex01, String sindex02, String sindex03, String sindex04, String sindex05,
+            String sindex06, String sindex07, Double dindex07, Double dindex08, Double dindex09, Double dindex10, Double dindex11
+    ) {
+        this.sField00 = new SimpleStringProperty(sindex00);
+        this.sField01 = new SimpleStringProperty(sindex01);
+        this.sField02 = new SimpleStringProperty(sindex02);
+        this.sField03 = new SimpleStringProperty(sindex03);
+        this.sField04 = new SimpleStringProperty(sindex04);
+        this.sField05 = new SimpleStringProperty(sindex05);
+        this.sField06 = new SimpleStringProperty(sindex06);
+        this.sField07 = new SimpleStringProperty(sindex07);
+        this.lField01 = new SimpleDoubleProperty(dindex07);
+        this.lField02 = new SimpleDoubleProperty(dindex08);
+        this.lField03 = new SimpleDoubleProperty(dindex09);
+        this.lField04 = new SimpleDoubleProperty(dindex10);
+        this.lField05 = new SimpleDoubleProperty(dindex11);
     }
 
     /*
     *Model for Inventory presentation
      */
-    InventoryModel(String index00, String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08) {
-        this.sField00 = new SimpleStringProperty(index00);
-        this.sField01 = new SimpleStringProperty(index01);
-        this.sField02 = new SimpleStringProperty(index02);
-        this.sField03 = new SimpleStringProperty(index03);
-        this.sField04 = new SimpleStringProperty(index04);
-        this.sField05 = new SimpleStringProperty(index05);
-        this.sField06 = new SimpleStringProperty(index06);
-        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index07));
-        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index08));
+    InventoryModel(String sindex00, String sindex01, String sindex02, String sindex03, String sindex04, String sindex05,
+            String sindex06, Double dindex07, Double dindex08) {
+        this.sField00 = new SimpleStringProperty(sindex00);
+        this.sField01 = new SimpleStringProperty(sindex01);
+        this.sField02 = new SimpleStringProperty(sindex02);
+        this.sField03 = new SimpleStringProperty(sindex03);
+        this.sField04 = new SimpleStringProperty(sindex04);
+        this.sField05 = new SimpleStringProperty(sindex05);
+        this.sField06 = new SimpleStringProperty(sindex06);
+        this.lField01 = new SimpleDoubleProperty(dindex07);
+        this.lField02 = new SimpleDoubleProperty(dindex08);
     }
 
     /*
     *Model for Inventory movement
      */
-    InventoryModel(String index00, String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08, String index09, String index10) {
-        this.sField00 = new SimpleStringProperty(index00);
-        this.sField01 = new SimpleStringProperty(index01);
-        this.sField02 = new SimpleStringProperty(index02);
-        this.sField03 = new SimpleStringProperty(index03);
-        this.sField04 = new SimpleStringProperty(index04);
-        this.sField05 = new SimpleStringProperty(index05);
-        this.sField06 = new SimpleStringProperty(index06);
-        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index07));
-        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index08));
-        this.lField03 = new SimpleDoubleProperty(Double.parseDouble(index09));
-        this.lField04 = new SimpleDoubleProperty(Double.parseDouble(index10));
+    InventoryModel(String sindex00, String sindex01, String sindex02, String sindex03, String sindex04, String sindex05,
+            String sindex06, String sindex07, Double dindex08, Double dindex09, Double dindex10, Double dindex11) {
+        this.sField00 = new SimpleStringProperty(sindex00);
+        this.sField01 = new SimpleStringProperty(sindex01);
+        this.sField02 = new SimpleStringProperty(sindex02);
+        this.sField03 = new SimpleStringProperty(sindex03);
+        this.sField04 = new SimpleStringProperty(sindex04);
+        this.sField05 = new SimpleStringProperty(sindex05);
+        this.sField06 = new SimpleStringProperty(sindex06);
+        this.sField07 = new SimpleStringProperty(sindex07);
+        this.lField01 = new SimpleDoubleProperty(dindex08);
+        this.lField02 = new SimpleDoubleProperty(dindex09);
+        this.lField03 = new SimpleDoubleProperty(dindex10);
+        this.lField04 = new SimpleDoubleProperty(dindex11);
     }
 
     /*
     *Model for Inventory Ledger
      */
-    InventoryModel(String index01, String index02, String index03, String index04, String index05,
-            String index06, String index07, String index08, String index09, String index10,
-            String dIndex01,String dIndex02,String dIndex03) {
-        this.sField01 = new SimpleStringProperty(index01);
-        this.sField02 = new SimpleStringProperty(index02);
-        this.sField03 = new SimpleStringProperty(index03);
-        this.sField04 = new SimpleStringProperty(index04);
-        this.sField05 = new SimpleStringProperty(index05);
-        this.sField06 = new SimpleStringProperty(index06);
-        this.sField07 = new SimpleStringProperty(index07);
-        this.sField08 = new SimpleStringProperty(index08);
-        this.sField09 = new SimpleStringProperty(index09);
-        this.sField10 = new SimpleStringProperty(index10);
-        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(dIndex01));
-        this.lField02 = new SimpleDoubleProperty(Double.parseDouble(dIndex02));
-        this.lField03 = new SimpleDoubleProperty(Double.parseDouble(dIndex03));
+    InventoryModel(String sindex01, String sindex02, String sindex03, String sindex04, String sindex05,
+            String sindex06, String sindex07, String sindex08, String sindex09, String sindex10,
+            Double dIndex01, Double dIndex02, Double dIndex03) {
+        this.sField01 = new SimpleStringProperty(sindex01);
+        this.sField02 = new SimpleStringProperty(sindex02);
+        this.sField03 = new SimpleStringProperty(sindex03);
+        this.sField04 = new SimpleStringProperty(sindex04);
+        this.sField05 = new SimpleStringProperty(sindex05);
+        this.sField06 = new SimpleStringProperty(sindex06);
+        this.sField07 = new SimpleStringProperty(sindex07);
+        this.sField08 = new SimpleStringProperty(sindex08);
+        this.sField09 = new SimpleStringProperty(sindex09);
+        this.sField10 = new SimpleStringProperty(sindex10);
+        this.lField01 = new SimpleDoubleProperty(dIndex01);
+        this.lField02 = new SimpleDoubleProperty(dIndex02);
+        this.lField03 = new SimpleDoubleProperty(dIndex03);
     }
 
     public String getsField00() {
