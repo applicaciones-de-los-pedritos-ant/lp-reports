@@ -590,7 +590,7 @@ public class InventoryMovement implements GReport {
             lsSQL = lsSQL + " AND a.sBranchCd = " + SQLUtil.toSQL(lsBranchCd);
         }
         lsSQL = lsSQL + " AND a.cRecdStat = '1' "
-                + "  GROUP BY a.sBranchCd, a.sStockIDx";
+                + "  GROUP BY sField01,sField02,a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
 
@@ -618,7 +618,7 @@ public class InventoryMovement implements GReport {
                 + "WHERE a.sBranchCd = b.sBranchCd "
                 + " AND a.sStockIDx = b.sStockIDx "
                 + " AND a.sStockIDx = c.sStockIDx "
-                + "  GROUP BY a.sBranchCd, a.sStockIDx";
+                + "  GROUP BY sField01,sField02,a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
 
