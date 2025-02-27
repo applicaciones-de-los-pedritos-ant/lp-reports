@@ -301,7 +301,7 @@ public class InventoryMovement implements GReport {
                     lsBranch = _instance.getBranchCode();
                 }
             }
-            System.out.println(getReportSQL(lsDateThru, lsBranch));
+//            System.out.println(getReportSQL(lsDateThru, lsBranch));
             ResultSet rs = _instance.executeQuery(getReportSQL(lsDateThru, lsBranch));
             if (MiscUtil.RecordCount(rs) == 0) {
                 _message = "No record found...";
@@ -433,7 +433,7 @@ public class InventoryMovement implements GReport {
             ));
         }
 
-        System.out.println("R1data.size = " + R1data.size());
+//        System.out.println("R1data.size = " + R1data.size());
         for (int lnCtr = 0; lnCtr <= R1data.size() - 1; lnCtr++) {
             if (!lsDateFrom.isEmpty()) {
                 String lnEndInv = (getEndInv(R1data.get(lnCtr).getsField00(),
@@ -678,7 +678,7 @@ public class InventoryMovement implements GReport {
             cell.setCellStyle(getHeaderCellStyle(workbook));
         }
 
-        System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
+//        System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
 
         headerRow.setHeightInPoints(20);
 
@@ -716,7 +716,7 @@ public class InventoryMovement implements GReport {
             sheet.autoSizeColumn(i);
             int currentWidth = sheet.getColumnWidth(i);
             sheet.setColumnWidth(i, currentWidth + 1000);
-            System.out.println("sheet width = " + sheet.getColumnWidth(i));
+//            System.out.println("sheet width = " + sheet.getColumnWidth(i));
         }
 
         // Ensure the directory exists
