@@ -6,7 +6,6 @@
  */
 package org.rmj.cas.food.reports.classes;
 
-import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
@@ -30,7 +29,6 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
@@ -326,9 +324,9 @@ public class InventoryLedger implements GReport {
                         rs.getObject("sField08").toString(),
                         rs.getObject("sField09").toString(),
                         rs.getObject("sField10").toString(),
-                        rs.getObject("lField01").toString(),
-                        rs.getObject("lField02").toString(),
-                        rs.getObject("lField03").toString()));
+                        rs.getDouble("lField01"),
+                        rs.getDouble("lField02"),
+                        rs.getDouble("lField03")));
             }
 //        rs.beforeFirst();
 //        //Convert the data-source to JasperReport data-source
