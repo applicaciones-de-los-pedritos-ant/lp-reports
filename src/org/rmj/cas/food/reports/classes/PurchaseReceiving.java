@@ -347,11 +347,11 @@ public class PurchaseReceiving implements GReport {
                         rs.getObject("sField03").toString(),
                         (rs.getObject("sField04") == null) ? "" : rs.getObject("sField04").toString(),
                         rs.getObject("sField05").toString(),
-                        rs.getObject("lField03").toString(),
-                        rs.getObject("lField01").toString(),
+                        rs.getObject("sField06").toString(),
+                        rs.getObject("sField07").toString(),
+                        rs.getObject("nField01").toString(),
                         rs.getObject("lField02").toString(),
-                        rs.getObject("sField06").toString()
-                ));
+                        rs.getObject("lField01").toString()));
             }
             //Convert the data-source to JasperReport data-source
             //JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
@@ -359,7 +359,7 @@ public class PurchaseReceiving implements GReport {
 
             excelName = "Purchase Receiving Summary - " + lsExcelDate + ".xlsx";
             if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-                String[] headers = {"Refer #", "Order No", "D. Transact", "D. Received", "Supplier", "TTL Qty", "Tran Total", "Amount Pd", "Status"};
+                String[] headers = {"Branch", "Refer #", "Order No", "D. Transact", "D. Received", "Supplier", "TTL Qty", "Tran Total", "Amount Pd", "Status"};
                 exportToExcel(R1data, headers);
             }
             //Create the parameter
@@ -400,9 +400,9 @@ public class PurchaseReceiving implements GReport {
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`"
                 + ", DATE_FORMAT(a.dRefernce, '%Y-%m-%d') `sField04`"
                 + ", b.sClientNm `sField05`"
-                + ", a.nTranTotl `lField01`"
-                + ", a.nAmtPaidx `lField02`"
-                + ", SUM(d.nQuantity) `lField03`"
+                + ", a.nTranTotl `nField01`"
+                + ", a.nAmtPaidx `lField01`"
+                + ", SUM(d.nQuantity) `lField02`"
                 + ", CASE a.cTranStat"
                 + " WHEN '0' THEN 'OPEN'"
                 + " WHEN '1' THEN 'APPROVED'"
@@ -410,6 +410,7 @@ public class PurchaseReceiving implements GReport {
                 + " WHEN '3' THEN 'CANCELLED'"
                 + " WHEN '4' THEN 'VOID'"
                 + " END `sField06`"
+                + ", e.sBranchNm `sField07`"
                 + " FROM PO_Receiving_Master a"
                 + " LEFT JOIN PO_Master c ON a.sSourceNo = c.sTransNox"
                 + ", Client_Master b"
@@ -719,16 +720,17 @@ public class PurchaseReceiving implements GReport {
                 row.getCell(11).setCellStyle(doubleStyle);
                 row.getCell(12).setCellStyle(doubleStyle);
             } else {
-                row.createCell(0).setCellValue(item.getsField01());
-                row.createCell(1).setCellValue(item.getsField02());
-                row.createCell(2).setCellValue(item.getsField03());
-                row.createCell(3).setCellValue(item.getsField04());
-                row.createCell(4).setCellValue(item.getsField05());
+                row.createCell(0).setCellValue(item.getsField07());
+                row.createCell(1).setCellValue(item.getsField01());
+                row.createCell(2).setCellValue(item.getsField02());
+                row.createCell(3).setCellValue(item.getsField03());
+                row.createCell(4).setCellValue(item.getsField04());
+                row.createCell(5).setCellValue(item.getsField05());
 
-                row.createCell(5).setCellValue(item.getlField03());
                 row.createCell(6).setCellValue(item.getlField01());
-                row.createCell(7).setCellValue(item.getlField02());
-                row.createCell(8).setCellValue(item.getsField06());
+                row.createCell(7).setCellValue(item.getnField01());
+                row.createCell(8).setCellValue(item.getlField02());
+                row.createCell(9).setCellValue(item.getsField06());
 
                 // Apply the double format style to the appropriate columns (5, 6, 7)
                 row.getCell(5).setCellStyle(doubleStyle);
