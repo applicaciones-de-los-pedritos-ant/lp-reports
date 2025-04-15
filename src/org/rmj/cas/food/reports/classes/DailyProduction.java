@@ -307,6 +307,7 @@ public class DailyProduction implements GReport {
         }
         String lsSQL = getReportSQLSummary();
         lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat NOT IN ('0','3')");
 
         ResultSet rs = _instance.executeQuery(lsSQL);
 
@@ -389,6 +390,7 @@ public class DailyProduction implements GReport {
         }
         String lsSQL = getReportSQLDetailed();
         lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat NOT IN ('0','3')");
 
         ResultSet rs = _instance.executeQuery(lsSQL);
 
