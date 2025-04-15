@@ -525,6 +525,7 @@ public class DailyProduction implements GReport {
                 + "  LEFT JOIN Inv_Type g"
                 + "  ON g.sInvTypCd = c.sInvTypCd"
                 + "  WHERE a.sTransNox = b.sTransNox"
+                + "  GROUP BY a.sTransNox,c.sBarCodex"
                 + "  ORDER BY b.sTransNox, c.sDescript";
 
         if (!System.getProperty("store.report.criteria.branch").equals("")) {
