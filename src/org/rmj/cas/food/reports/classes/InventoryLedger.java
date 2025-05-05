@@ -33,11 +33,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
@@ -273,6 +271,7 @@ public class InventoryLedger implements GReport {
             String lsDateThru = "";
             String lsBranch = "";
             String lsExcelDate = "";
+            String lsSQL = "";
 
             if (!System.getProperty("store.report.criteria.datefrom").equals("")
                     && !System.getProperty("store.report.criteria.datethru").equals("")) {
@@ -297,9 +296,10 @@ public class InventoryLedger implements GReport {
             if (!System.getProperty("store.report.criteria.stock").equals("")) {
                 lsCondition += " AND a.sStockIDx = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.stock"));
             }
+            lsSQL = getReportMaster(lsCondition);
+            System.out.println(lsSQL);
 
-            System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
-            ResultSet rs = _instance.executeQuery(MiscUtil.addCondition(getReportSQL(), lsCondition));
+            ResultSet rs = _instance.executeQuery(lsSQL);
             if (MiscUtil.RecordCount(rs) == 0) {
                 _message = "No record found...";
                 return false;
@@ -351,7 +351,7 @@ public class InventoryLedger implements GReport {
             params.put("sReportNm", System.getProperty("store.report.header") + " as of " + CommonUtils.toDate(lsDateThru));
             params.put("sReportDt", "");
 
-            String lsSQL = "SELECT sClientNm FROM Client_Master"
+            lsSQL = "SELECT sClientNm FROM Client_Master"
                     + " WHERE sClientID IN ("
                     + "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
 
@@ -390,49 +390,90 @@ public class InventoryLedger implements GReport {
         System.clearProperty("store.report.header");
     }
 
-    private String getReportSQL() {
+    private String getReportMaster(String fsCondition) {
         String lsSQL = "SELECT"
-                + " IFNULL(e.sBranchNm,IFNULL(l.sBranchNm,'')) sField01"
-                + " , CASE a.sSourceCd "
+                + " IFNULL(e.sBranchNm,IFNULL(l.sBranchNm,'')) `sField01`"
+                + " , CASE ILedger.sSourceCd "
                 + " WHEN 'Dlvr' THEN IFNULL(d.sBranchNm,'') "
                 + " WHEN 'AcDl' THEN IFNULL(f.sBranchNm,'') "
                 + " ELSE IFNULL(e.sBranchNm, IFNULL(l.sBranchNm,'')) "
-                + " END sField02 "
-                + ", IFNULL(h.sBarCodex,IFNULL(a.sStockIDx,'')) sField03"
-                + ", IFNULL(h.sDescript,'') sField04"
-                + ", IFNULL(i.sDescript,'') sField05"
-                + ", IFNULL(j.sDescript,'') sField06"
-                + ", IFNULL(k.sMeasurNm,'') sField07"
-                + ", a.sSourceNo sField08"
-                + ", IFNULL(b.sDescript,a.sSourceCd) sField09 "
-                + ", a.dTransact sField10"
-                + ", IFNull(a.nQtyInxxx,0) lField01"
-                + ", IFNull(a.nQtyOutxx,0) lField02"
-                + ", IFNull(a.nQtyOnHnd,0) lField03"
-                + " FROM Inv_Ledger a"
+                + " END `sField02` "
+                + ", IFNULL(h.sBarCodex,IFNULL(ILedger.sStockIDx,'')) `sField03`"
+                + ", IFNULL(h.sDescript,'') `sField04`"
+                + ", IFNULL(i.sDescript,'') `sField05`"
+                + ", IFNULL(j.sDescript,'') `sField06`"
+                + ", IFNULL(k.sMeasurNm,'') `sField07`"
+                + ", ILedger.sSourceNo sField08"
+                + ", IFNULL(b.sDescript,ILedger.sSourceCd) sField09 "
+                + ", ILedger.dTransact sField10"
+                + ", IFNull(ILedger.nQtyInxxx,0) lField01"
+                + ", IFNull(ILedger.nQtyOutxx,0) lField02"
+                + ", IFNull(ILedger.nQtyOnHnd,0) lField03"
+                + " FROM (" + getReportSQL(fsCondition)
+                + " UNION ALL " + getReportSQLHistory(fsCondition) + ") `ILedger` "
                 + " LEFT JOIN xxxSource_Transaction b"
-                + " ON a.sSourceCd = b.sSourceCd  "
+                + " ON ILedger.sSourceCd = b.sSourceCd  "
                 + " LEFT JOIN Inv_Transfer_Master c"
-                + " ON a.sSourceNo = c.sTransNox AND a.sSourceCd = 'Dlvr'"
+                + " ON ILedger.sSourceNo = c.sTransNox AND ILedger.sSourceCd = 'Dlvr'"
                 + " LEFT JOIN Branch d"
                 + " ON c.sDestinat = d.sBranchCd"
                 + " LEFT JOIN Inv_Transfer_Master g "
-                + " ON a.sSourceNo = g.sTransNox AND a.sSourceCd = 'AcDl' "
+                + " ON ILedger.sSourceNo = g.sTransNox AND ILedger.sSourceCd = 'AcDl' "
                 + " LEFT JOIN Branch f"
                 + " ON LEFT(g.sTransNox,4) = f.sBranchCd"
                 + " LEFT JOIN Branch e"
-                + " ON LEFT(a.sSourceNo,4) = e.sBranchCd"
+                + " ON LEFT(ILedger.sSourceNo,4) = e.sBranchCd"
                 + " LEFT JOIN Branch l"
-                + " ON a.sBranchCd = l.sBranchCd"
+                + " ON ILedger.sBranchCd = l.sBranchCd"
                 + " LEFT JOIN Inventory h"
-                + " ON a.sStockIDx =  h.sStockIDx"
+                + " ON ILedger.sStockIDx =  h.sStockIDx"
                 + " LEFT JOIN Brand i"
                 + " ON h.sBrandCde =  i.sBrandCde"
                 + " LEFT JOIN Model j"
                 + " ON h.sModelCde =  j.sModelCde"
                 + " LEFT JOIN Measure k"
-                + " ON h.sMeasurID =  k.sMeasurID"
-                + " ORDER BY  sField01,sField03,a.dTransact ASC, a.nLedgerNo ASC";
+                + " ON h.sMeasurID =  k.sMeasurID "
+                + "ORDER BY sField01, sField03, ILedger.dTransact, ILedger.nLedgerNo ASC;";
+
+        return lsSQL;
+
+    }
+
+    private String getReportSQL(String fsCondition) {
+        String lsSQL = "SELECT"
+                + " a.sBranchCd"
+                + ", a.sSourceCd"
+                + ", a.sStockIDx"
+                + ", a.sSourceNo"
+                + ", a.dTransact"
+                + ", a.nQtyInxxx"
+                + ", a.nQtyOutxx"
+                + ", a.nQtyOnHnd"
+                + ", a.nLedgerNo"
+                + ", 'Inv_Ledger' AS xxxSource"
+                + "    FROM Inv_Ledger a";
+
+        lsSQL = MiscUtil.addCondition(lsSQL, fsCondition);
+
+        return lsSQL;
+    }
+
+    private String getReportSQLHistory(String fsCondition) {
+        String lsSQL = "SELECT"
+                + " a.sBranchCd"
+                + ", a.sSourceCd"
+                + ", a.sStockIDx"
+                + ", a.sSourceNo"
+                + ", a.dTransact"
+                + ", a.nQtyInxxx"
+                + ", a.nQtyOutxx"
+                + ", a.nQtyOnHnd"
+                + ", a.nLedgerNo"
+                + ", 'Inv_Ledger_Hist' AS xxxSource"
+                + "    FROM Inv_Ledger_Hist a";
+
+        lsSQL = MiscUtil.addCondition(lsSQL, fsCondition);
+
         return lsSQL;
     }
 
