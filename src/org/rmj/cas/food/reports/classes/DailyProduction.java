@@ -417,7 +417,7 @@ public class DailyProduction implements GReport {
 
         excelName = "Daily Production Detailed - " + lsExcelDate + ".xlsx";
         if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-            String[] headers = {"Branch", "Barcode", "Description", "Brand", "Measure", "Order Qty", "Goal Qty", "Qty", "Cost", "Total Amount"};
+            String[] headers = {"Branch","Date","Transaction No", "Barcode", "Description", "Brand","Inv. Type", "Measure", "Order Qty", "Goal Qty", "Qty", "Cost", "Total Amount"};
             exportToExcel(R1data, headers);
         }
         //Create the parameter
