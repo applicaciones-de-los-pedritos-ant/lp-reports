@@ -2,7 +2,7 @@ package org.rmj.cas.food.reports.classes;
 
 import javafx.beans.property.SimpleObjectProperty;
 
-public class DailyProductionModel {
+public class InvWasteModel {
 
     private SimpleObjectProperty sField01;
     private SimpleObjectProperty sField02;
@@ -21,23 +21,23 @@ public class DailyProductionModel {
     private SimpleObjectProperty nField05;
 
     //summarized production
-    DailyProductionModel(String sField01, String sField02, String sField03, String sField04, String sField05,
-            Double nField01, Double nField02, Double nField03, Double nField04) {
+    InvWasteModel(String sField01, String sField02, String sField03, String sField04, String sField05, String sField06,
+            Double nField01, Double nField02, Double nField03) {
         this.sField01 = new SimpleObjectProperty(sField01);
         this.sField02 = new SimpleObjectProperty(sField02);
         this.sField03 = new SimpleObjectProperty(sField03);
         this.sField04 = new SimpleObjectProperty(sField04);
         this.sField05 = new SimpleObjectProperty(sField05);
+        this.sField06 = new SimpleObjectProperty(sField06);
         this.nField01 = new SimpleObjectProperty(nField01);
         this.nField02 = new SimpleObjectProperty(nField02);
         this.nField03 = new SimpleObjectProperty(nField03);
-        this.nField04 = new SimpleObjectProperty(nField04);
     }
 
     //detailed production
-    DailyProductionModel(String sField01, String sField02, String sField03, String sField04, String sField05,
+    InvWasteModel(String sField01, String sField02, String sField03, String sField04, String sField05,
             String sField06,String sField07,String sField08,
-            Double nField01, Double nField02, Double nField03, Double nField04) {
+            Double nField01, Double nField02, Double nField03) {
         this.sField01 = new SimpleObjectProperty(sField01);
         this.sField02 = new SimpleObjectProperty(sField02);
         this.sField03 = new SimpleObjectProperty(sField03);

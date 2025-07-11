@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -393,6 +394,11 @@ public class Purchases implements GReport {
             );
         } catch (JRException ex) {
             System.err.println("Error filling report: " + ex.getMessage());
+            Logger.getLogger(PurchaseReceiving.class.getName()).log(Level.SEVERE, null, ex);
+
+            Platform.runLater(() -> {
+                ShowMessageFX.Error(ex.getMessage(), Purchases.class.getSimpleName(), "Please inform MIS Department.");
+            });
             ex.printStackTrace();
             return false;
         }
@@ -468,7 +474,10 @@ public class Purchases implements GReport {
                     params,
                     jrRS);
         } catch (JRException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PurchaseReceiving.class.getName()).log(Level.SEVERE, null, ex);
+            ShowMessageFX.Error(ex.getMessage(), Purchases.class.getSimpleName(), "Please inform MIS Department.");
+            ex.printStackTrace();
+            return false;
         }
 
         return true;

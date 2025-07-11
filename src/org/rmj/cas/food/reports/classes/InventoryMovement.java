@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -369,7 +370,9 @@ public class InventoryMovement implements GReport {
 //                    params,
 //                    jrRS);
         } catch (JRException ex) {
+            ShowMessageFX.Error(ex.getMessage(), InventoryMovement.class.getSimpleName(), "Please inform MIS Department.");
             Logger.getLogger(InventoryMovement.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
 
         return true;
@@ -485,7 +488,12 @@ public class InventoryMovement implements GReport {
 //                    params,
 //                    jrRS);
         } catch (JRException ex) {
+            
+            Platform.runLater(() -> {
+            ShowMessageFX.Error(ex.getMessage(), InventoryMovement.class.getSimpleName(), "Please inform MIS Department.");
+            });
             Logger.getLogger(InventoryMovement.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
 
         return true;
@@ -679,7 +687,6 @@ public class InventoryMovement implements GReport {
         }
 
 //        System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
-
         headerRow.setHeightInPoints(20);
 
         // Create a CellStyle with double format (e.g., two decimal places)

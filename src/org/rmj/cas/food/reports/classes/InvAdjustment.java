@@ -38,7 +38,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
@@ -66,7 +65,7 @@ import org.rmj.appdriver.constants.UserRight;
 import org.rmj.appdriver.iface.GReport;
 import org.rmj.replication.utility.LogWrapper;
 
-public class DailyProduction implements GReport {
+public class InvAdjustment implements GReport {
 
     private GRider _instance;
     private boolean _preview = true;
@@ -74,7 +73,7 @@ public class DailyProduction implements GReport {
     private LinkedList _rptparam = null;
     private JasperPrint _jrprint = null;
     private JasperViewer jrViewer = null;
-    private LogWrapper logwrapr = new LogWrapper("org.rmj.foodreports.classes.DailyProduction", "DailyProductionReport.log");
+    private LogWrapper logwrapr = new LogWrapper("org.rmj.foodreports.classes.InvAdjustment", "InvAdjustmentReport.log");
     boolean bResult = false;
     Stage stage;
     static String excelName = "";
@@ -83,7 +82,7 @@ public class DailyProduction implements GReport {
     private double xOffset = 0;
     private double yOffset = 0;
 
-    public DailyProduction() {
+    public InvAdjustment() {
         _rptparam = new LinkedList();
         _rptparam.add("store.report.id");
         _rptparam.add("store.report.no");
@@ -119,6 +118,7 @@ public class DailyProduction implements GReport {
         DailyProductionCriteriaController instance = new DailyProductionCriteriaController();
         instance.singleDayOnly(false);
         instance.setGRider(_instance);
+        instance.setCriteriaTitle("Inventory Adjustment Criteria");
 
         try {
 
@@ -150,7 +150,7 @@ public class DailyProduction implements GReport {
             stage.setScene(scene);
             stage.showAndWait();
         } catch (IOException e) {
-            ShowMessageFX.Error(e.getMessage(), DailyProduction.class.getSimpleName(), "Please inform MIS Department.");
+            ShowMessageFX.Error(e.getMessage(), InvAdjustment.class.getSimpleName(), "Please inform MIS Department.");
             System.exit(1);
         }
 
@@ -270,7 +270,7 @@ public class DailyProduction implements GReport {
             stage.close();
             System.out.println("Report failed to load");
 //            progressIndicator.setVisible(false);
-//            System.err.println("Failed to load the report: " + reportTask.getException().getMessage());
+            System.err.println("Failed to load the report: " + reportTask.getException().getMessage());
         });
 
         // Run the task in a background thread
@@ -306,34 +306,32 @@ public class DailyProduction implements GReport {
         } else {
             lsCondition = "0 = 1";
         }
-        String lsSQL = getReportSQLSummary();
-        lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
-        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat NOT IN ('0','3','4')");
+        String lsSQL = getReportMaster(1, lsCondition);
 
         ResultSet rs = _instance.executeQuery(lsSQL);
-        System.out.println("SQL Report = " + lsSQL);
+        System.out.println("Report Query: " + lsSQL);
 
-        ObservableList<DailyProductionModel> R1data = FXCollections.observableArrayList();
+        ObservableList<InvAdjustmentModel> R1data = FXCollections.observableArrayList();
         rs.beforeFirst();
         while (rs.next()) {
-            R1data.add(new DailyProductionModel(
+            R1data.add(new InvAdjustmentModel(
                     rs.getObject("sField01").toString(),
                     rs.getObject("sField02").toString(),
                     rs.getObject("sField03").toString(),
                     rs.getObject("sField04").toString(),
                     rs.getObject("sField05").toString(),
+                    rs.getObject("sField06").toString(),
+                    rs.getObject("sField07").toString(),
                     rs.getDouble("nField01"),
                     rs.getDouble("nField02"),
-                    rs.getDouble("nField03"),
-                    rs.getDouble("nField04")
+                    rs.getDouble("nField03")
             ));
         }
 
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
-
-        excelName = "Daily Production Summarized- " + lsExcelDate + ".xlsx";
+        excelName = "Inventory Adjustment Summarized- " + lsExcelDate + ".xlsx";
         if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-            String[] headers = {"Branch", "Barcode", "Description", "Brand", "Measure", "Order Qty", "Goal Qty", "Qty", "Cost", "Total Amount"};
+            String[] headers = {"Branch", "Source", "Barcode", "Description", "Brand", "Measure", "Inv. Type", "QTY-IN", "QTY-OUT", "Inv. Cost"};
             exportToExcel(R1data, headers);
         }
         //Create the parameter
@@ -362,12 +360,12 @@ public class DailyProduction implements GReport {
                     params,
                     jrRS);
         } catch (JRException ex) {
-            
             Platform.runLater(() -> {
-            ShowMessageFX.Error(ex.getMessage(), DailyProduction.class.getSimpleName(), "Please inform MIS Department.");
+                ShowMessageFX.Error(ex.getMessage(), InvAdjustment.class.getSimpleName(), "Please inform MIS Department.");
             });
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(InvAdjustment.class.getName()).log(Level.SEVERE, null, ex);
             return false;
+
         }
 
         return true;
@@ -395,17 +393,13 @@ public class DailyProduction implements GReport {
         } else {
             lsCondition = "0 = 1";
         }
-        String lsSQL = getReportSQLDetailed();
-        lsSQL = MiscUtil.addCondition(lsSQL, lsCondition);
-        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat NOT IN ('0','3','4')");
-
+        String lsSQL = getReportMaster(2, lsCondition);
         ResultSet rs = _instance.executeQuery(lsSQL);
-        System.out.println("SQL Report = " + lsSQL);
-
-        ObservableList<DailyProductionModel> R1data = FXCollections.observableArrayList();
+        System.out.println("Report Query: " + lsSQL);
+        ObservableList<InvAdjustmentModel> R1data = FXCollections.observableArrayList();
         rs.beforeFirst();
         while (rs.next()) {
-            R1data.add(new DailyProductionModel(
+            R1data.add(new InvAdjustmentModel(
                     rs.getObject("sField01").toString(),
                     rs.getObject("sField02").toString(),
                     rs.getObject("sField03").toString(),
@@ -414,18 +408,17 @@ public class DailyProduction implements GReport {
                     rs.getObject("sField06").toString(),
                     rs.getObject("sField07").toString(),
                     rs.getObject("sField08").toString(),
+                    rs.getObject("sField09").toString(),
                     rs.getDouble("nField01"),
                     rs.getDouble("nField02"),
-                    rs.getDouble("nField03"),
-                    rs.getDouble("nField04")
+                    rs.getDouble("nField03")
             ));
         }
-
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
 
-        excelName = "Daily Production Detailed - " + lsExcelDate + ".xlsx";
+        excelName = "Inventory Adjustment Detailed - " + lsExcelDate + ".xlsx";
         if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-            String[] headers = {"Branch","Date","Transaction No", "Barcode", "Description", "Brand","Inv. Type", "Measure", "Order Qty", "Goal Qty", "Qty", "Cost", "Total Amount"};
+            String[] headers = {"Branch", "Transaction No", "Date", "Source", "Barcode", "Description", "Brand", "Measure", "Inv. Type", "QTY-IN", "QTY-OUT", "Inv. Cost"};
             exportToExcel(R1data, headers);
         }
         //Create the parameter
@@ -454,13 +447,9 @@ public class DailyProduction implements GReport {
                     params,
                     jrRS);
         } catch (JRException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
-            
-            Platform.runLater(() -> {
-            ShowMessageFX.Error(ex.getMessage(), DailyProduction.class.getSimpleName(), "Please inform MIS Department.");
-            });
+            ShowMessageFX.Error(ex.getMessage(), InvAdjustment.class.getSimpleName(), "Please inform MIS Department.");
+            Logger.getLogger(InvAdjustment.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             return false;
-            
         }
 
         return true;
@@ -476,79 +465,142 @@ public class DailyProduction implements GReport {
         _rptparam.forEach(item -> System.clearProperty((String) item));
         System.clearProperty("store.report.file");
         System.clearProperty("store.report.header");
+
     }
 
-    private String getReportSQLSummary() {
+    private String getReportMaster(int sReportType, String fsCondition) {
+        String lsSQL;
+
+        if (sReportType == 1) {  //summary
+
+            lsSQL = "SELECT"
+                    + "   ze.sBranchNm `sField01`"
+                    + " , IFNULL (zf.sDescript, InvAdjustment.sSourceCd) `sField02`"
+                    + " , za.sBarCodex `sField03`"
+                    + " , IFNULL (za.sDescript, '') `sField04`"
+                    + " , IFNULL (zc.sDescript, '') `sField05`"
+                    + " , IFNULL (zb.sMeasurNm, '') `sField06`"
+                    + " , IFNULL (zd.sDescript, '') `sField07`"
+                    + " , SUM(InvAdjustment.nQtyInxxx) `nField01`"
+                    + " , SUM(InvAdjustment.nQtyOutxx) `nField02`"
+                    + " , IFNULL (InvAdjustment.nInvCostx, za.nSelPrice) `nField03`"
+                    + "     FROM (" + getReportSQL(fsCondition)
+                    + "         UNION ALL " + getReportSQLHistory(fsCondition) + ") `InvAdjustment` "
+                    + "  LEFT JOIN Inventory za ON InvAdjustment.sStockIDx = za.sStockIDx"
+                    + "  LEFT JOIN Measure zb ON za.sMeasurID = zb.sMeasurID"
+                    + "  LEFT JOIN Brand zc ON za.sBrandCde = zc.sBrandCde"
+                    + "  LEFT JOIN Inv_Type zd ON za.sInvTypCd = zd.sInvTypCd"
+                    + "  LEFT JOIN Branch ze ON ze.sBranchCd = InvAdjustment.sBranchCd"
+                    + "  LEFT JOIN xxxSource_Transaction zf ON zf.sSourceCd = InvAdjustment.sSourceCd"
+                    + "         GROUP BY ze.sBranchCd, sField02,  za.sBarCodex"
+                    + "             ORDER BY ze.sBranchNm ,sField02 , za.sBarCodex";
+        } else {//detailed
+
+            lsSQL = "SELECT"
+                    + "   ze.sBranchNm `sField01`"
+                    + " , IFNULL (InvAdjustment.sSourceNo,zf.sDescript) `sField02`"
+                    + " , InvAdjustment.dTransact `sField03`"
+                    + " , IFNULL ( zf.sDescript, InvAdjustment.sSourceCd ) `sField04`"
+                    + " , za.sBarCodex `sField05`"
+                    + " , IFNULL (za.sDescript, '') `sField06`"
+                    + " , IFNULL (zc.sDescript, '') `sField07`"
+                    + " , IFNULL (zb.sMeasurNm, '') `sField08`"
+                    + " , IFNULL (zd.sDescript, '') `sField09`"
+                    + " , InvAdjustment.nQtyInxxx `nField01`"
+                    + " , InvAdjustment.nQtyOutxx `nField02`"
+                    + " , IFNULL (InvAdjustment.nInvCostx, za.nSelPrice) `nField03`"
+                    + "     FROM (" + getReportSQL(fsCondition)
+                    + "         UNION ALL " + getReportSQLHistory(fsCondition) + ") `InvAdjustment` "
+                    + "  LEFT JOIN Inventory za ON InvAdjustment.sStockIDx = za.sStockIDx"
+                    + "  LEFT JOIN Measure zb ON za.sMeasurID = zb.sMeasurID"
+                    + "  LEFT JOIN Brand zc ON za.sBrandCde = zc.sBrandCde"
+                    + "  LEFT JOIN Inv_Type zd ON za.sInvTypCd = zd.sInvTypCd"
+                    + "  LEFT JOIN Branch ze ON ze.sBranchCd = InvAdjustment.sBranchCd"
+                    + "  LEFT JOIN xxxSource_Transaction zf ON zf.sSourceCd = InvAdjustment.sSourceCd"
+                    + "         ORDER BY ze.sBranchNm, InvAdjustment.sSourceNo, InvAdjustment.dTransact";
+        }
+
+        return lsSQL;
+    }
+
+    private String getReportSQL(String fsCondition) {
         String lsSQL = "SELECT"
-                + " f.sBranchNm sField01"
-                + " , c.sBarCodex sField02"
-                + " , c.sDescript sField03"
-                + " , IFNULL(e.sDescript, '') sField04"
-                + " , IFNULL(d.sMeasurNm, '') sField05"
-                + " , SUM(b.nOrderQty) nField01"
-                + " , SUM(b.nGoalQtyx) nField02"
-                + " , SUM(b.nQuantity) nField03"
-                + " , c.nUnitPrce nField04"
-                + "  FROM Daily_Production_Master a"
-                + " , Daily_Production_Detail b"
-                + "  LEFT JOIN Inventory c"
-                + "  ON b.sStockIDx = c.sStockIDx"
-                + "  LEFT JOIN Measure d"
-                + "  ON c.sMeasurID = d.sMeasurID"
-                + "  LEFT JOIN Brand e"
-                + "  ON c.sBrandCde = e.sBrandCde"
-                + "  LEFT JOIN Branch f"
-                + "  ON  f.sBranchCd = LEFT(b.sTransNox,4)"
-                + "  WHERE a.sTransNox = b.sTransNox"
-                + "  GROUP BY f.sBranchCd,c.sBarCodex"
-                + "  ORDER BY b.sTransNox, c.sDescript";
+                + " a.sBranchCd"
+                + " , a.sSourceNo"
+                + " , a.dTransact"
+                + " , a.sStockIDx"
+                + " , a.nQtyInxxx"
+                + " , a.nQtyOutxx"
+                + " , b.nInvCostx"
+                + " , CASE"
+                + "     WHEN b.sSourceCd IS NULL THEN 'Inventory Transfer'"
+                + "     WHEN b.sSourceCd = '' THEN 'Adjustment'"
+                + "     ELSE b.sSourceCd"
+                + " END `sSourceCd`"
+                + "     FROM Inv_Ledger a"
+                + " LEFT JOIN (SELECT"
+                + "         aa.sTransNox"
+                + "         , bb.sStockIDx"
+                + "         , aa.sSourceCd"
+                + "         , bb.nInvCostx"
+                + "         FROM Inv_Adjustment_Master aa,"
+                + "         Inv_Adjustment_Detail bb"
+                + "             WHERE aa.sTransNox = bb.sTransNox"
+                + "                 AND aa.cTranStat NOT IN ('0', '3', '4')) b"
+                + "     ON a.sStockIDx = b.sStockIDx"
+                + "     AND a.sSourceCd IN ('CM', 'DM')"
+                + "     AND a.sSourceNo = b.sTransNox"
+                + "     WHERE a.sSourceCd IN ('CM', 'DM')";
+
+        lsSQL = MiscUtil.addCondition(lsSQL, fsCondition);
 
         if (!System.getProperty("store.report.criteria.branch").equals("")) {
-            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox,4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
+            lsSQL = MiscUtil.addCondition(lsSQL, "a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
         } else {
             if (_instance.getUserLevel() < UserRight.SUPERVISOR) {
-                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(sTransNox,4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()));
             }
         }
 
         return lsSQL;
     }
 
-    private String getReportSQLDetailed() {
+    private String getReportSQLHistory(String fsCondition) {
         String lsSQL = "SELECT"
-                + " f.sBranchNm sField01"
-                + " , a.sTransNox sField02"
-                + " , DATE_FORMAT(a.dTransact, '%Y-%m-%d') sField03"
-                + " , c.sBarCodex sField04"
-                + " , c.sDescript sField05"
-                + " , IFNULL(e.sDescript, '') sField06"
-                + " , IFNULL(g.sDescript, '') sField07"
-                + " , IFNULL(d.sMeasurNm, '') sField08"
-                + " , SUM(b.nOrderQty) nField01"
-                + " , SUM(b.nGoalQtyx) nField02"
-                + " , SUM(b.nQuantity) nField03"
-                + " , c.nUnitPrce nField04"
-                + "  FROM Daily_Production_Master a"
-                + " , Daily_Production_Detail b"
-                + "  LEFT JOIN Inventory c"
-                + "  ON b.sStockIDx = c.sStockIDx"
-                + "  LEFT JOIN Measure d"
-                + "  ON c.sMeasurID = d.sMeasurID"
-                + "  LEFT JOIN Brand e"
-                + "  ON c.sBrandCde = e.sBrandCde"
-                + "  LEFT JOIN Branch f"
-                + "  ON  f.sBranchCd = LEFT(b.sTransNox,4)"
-                + "  LEFT JOIN Inv_Type g"
-                + "  ON g.sInvTypCd = c.sInvTypCd"
-                + "  WHERE a.sTransNox = b.sTransNox"
-                + "  GROUP BY a.sTransNox,c.sBarCodex"
-                + "  ORDER BY b.sTransNox, c.sDescript";
+                + " a.sBranchCd"
+                + " , a.sSourceNo"
+                + " , a.dTransact"
+                + " , a.sStockIDx"
+                + " , a.nQtyInxxx"
+                + " , a.nQtyOutxx"
+                + " , b.nInvCostx"
+                + " , CASE"
+                + "     WHEN b.sSourceCd IS NULL THEN 'Inventory Transfer'"
+                + "     WHEN b.sSourceCd = '' THEN 'Adjustment'"
+                + "     ELSE b.sSourceCd"
+                + " END `sSourceCd`"
+                + "     FROM Inv_Ledger_Hist a"
+                + " LEFT JOIN (SELECT"
+                + "         aa.sTransNox"
+                + "         , bb.sStockIDx"
+                + "         , aa.sSourceCd"
+                + "         , bb.nInvCostx"
+                + "         FROM Inv_Adjustment_Master aa,"
+                + "         Inv_Adjustment_Detail bb"
+                + "             WHERE aa.sTransNox = bb.sTransNox"
+                + "                 AND aa.cTranStat NOT IN ('0', '3', '4')) b"
+                + "     ON a.sStockIDx = b.sStockIDx"
+                + "     AND a.sSourceCd IN ('CM', 'DM')"
+                + "     AND a.sSourceNo = b.sTransNox"
+                + "     WHERE a.sSourceCd IN ('CM', 'DM')";
 
+        lsSQL = MiscUtil.addCondition(lsSQL, fsCondition);
         if (!System.getProperty("store.report.criteria.branch").equals("")) {
-            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox,4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
+            lsSQL = MiscUtil.addCondition(lsSQL, "a.sBranchCd = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
+
         } else {
             if (_instance.getUserLevel() < UserRight.SUPERVISOR) {
-                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(sTransNox,4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.sBranchCd = " + SQLUtil.toSQL(_instance.getBranchCode()));
             }
         }
 
@@ -571,8 +623,7 @@ public class DailyProduction implements GReport {
             stage.setScene(scene);
             stage.showAndWait();
         } catch (IOException ex) {
-             Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
-            
+            Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
@@ -606,7 +657,7 @@ public class DailyProduction implements GReport {
         return headerStyle;
     }
 
-    public static void exportToExcel(ObservableList<DailyProductionModel> data, String[] headers) {
+    public static void exportToExcel(ObservableList<InvAdjustmentModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Inventory Data");
 
@@ -628,8 +679,9 @@ public class DailyProduction implements GReport {
         doubleStyle.setDataFormat(format.getFormat("#,##0.00")); // Adjust format as needed
         // Populate data rows
         int rowIndex = 1;
-        for (DailyProductionModel item : data) {
+        for (InvAdjustmentModel item : data) {
             Row row = sheet.createRow(rowIndex++);
+            //summary
 
             if (System.getProperty("store.report.criteria.presentation").equals("1")) {
                 row.createCell(0).setCellValue(item.getsField01().toString());
@@ -637,12 +689,13 @@ public class DailyProduction implements GReport {
                 row.createCell(2).setCellValue(item.getsField03().toString());
                 row.createCell(3).setCellValue(item.getsField04().toString());
                 row.createCell(4).setCellValue(item.getsField05().toString());
-                row.createCell(5).setCellValue(item.getnField01().toString());
-                row.createCell(6).setCellValue(item.getnField02().toString());
-                row.createCell(7).setCellValue(item.getnField03().toString());
-                row.createCell(8).setCellValue(item.getnField04().toString());
-                row.createCell(9).setCellValue(String.valueOf((Double) item.getnField04() * (Double) item.getnField03()));
+                row.createCell(5).setCellValue(item.getsField06().toString());
+                row.createCell(6).setCellValue(item.getsField07().toString());
+                row.createCell(7).setCellValue(item.getnField01().toString());
+                row.createCell(8).setCellValue(item.getnField02().toString());
+                row.createCell(9).setCellValue(item.getnField03().toString());
             } else {
+                //detailed
                 row.createCell(0).setCellValue(item.getsField01().toString());
                 row.createCell(1).setCellValue(item.getsField02().toString());
                 row.createCell(2).setCellValue(item.getsField03().toString());
@@ -651,11 +704,10 @@ public class DailyProduction implements GReport {
                 row.createCell(5).setCellValue(item.getsField06().toString());
                 row.createCell(6).setCellValue(item.getsField07().toString());
                 row.createCell(7).setCellValue(item.getsField08().toString());
-                row.createCell(8).setCellValue(item.getnField01().toString());
-                row.createCell(9).setCellValue(item.getnField02().toString());
-                row.createCell(10).setCellValue(item.getnField03().toString());
-                row.createCell(11).setCellValue(item.getnField04().toString());
-                row.createCell(12).setCellValue(String.valueOf((Double) item.getnField04() * (Double) item.getnField03()));
+                row.createCell(8).setCellValue(item.getsField09().toString());
+                row.createCell(9).setCellValue(item.getnField01().toString());
+                row.createCell(10).setCellValue(item.getnField02().toString());
+                row.createCell(11).setCellValue(item.getnField03().toString());
             }
         }
 
@@ -722,7 +774,7 @@ public class DailyProduction implements GReport {
             String formattedDateThru = outputFormat.format(dateThru);
             return formattedDateFrom + " to " + formattedDateThru;
         } catch (ParseException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(InvAdjustment.class.getName()).log(Level.SEVERE, null, ex);
             return "";
         }
 
@@ -742,9 +794,10 @@ public class DailyProduction implements GReport {
             String formattedDateThru = outputFormat.format(dateThru);
             return formattedDateThru;
         } catch (ParseException ex) {
-            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(InvAdjustment.class.getName()).log(Level.SEVERE, null, ex);
             return "";
         }
 
     }
+
 }

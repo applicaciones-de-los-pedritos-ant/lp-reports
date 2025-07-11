@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -372,7 +373,12 @@ public class InventoryLedger implements GReport {
 //                    params,
 //                    jrRS);
         } catch (JRException ex) {
+            
+            Platform.runLater(() -> {
+            ShowMessageFX.Error(ex.getMessage(), InventoryLedger.class.getSimpleName(), "Please inform MIS Department.");
+            });
             Logger.getLogger(InventoryLedger.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
 
         return true;

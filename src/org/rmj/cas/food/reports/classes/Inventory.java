@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -450,7 +451,7 @@ public class Inventory implements GReport {
                 R1data.get(lnCtr).setlField05(
                         getEndInv(R1data.get(lnCtr).getsField00().toString(),
                                 lsDateThru,
-                        R1data.get(lnCtr).getsField07()).toString());
+                                R1data.get(lnCtr).getsField07()).toString());
             }
         }
 
@@ -494,7 +495,12 @@ public class Inventory implements GReport {
 //                    params,
 //                    jrRS);
         } catch (JRException ex) {
+            
+            Platform.runLater(() -> {
+            ShowMessageFX.Error(ex.getMessage(), Inventory.class.getSimpleName(), "Please inform MIS Department.");
+            });
             Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
 
         return true;
@@ -538,7 +544,7 @@ public class Inventory implements GReport {
 
     }
 
-    private Object getEndInv(String StockIDx, String date,String fsBranch) {
+    private Object getEndInv(String StockIDx, String date, String fsBranch) {
         String lsSQL = "SELECT"
                 + " nQtyOnHnd "
                 + " FROM Inv_Ledger "
@@ -762,7 +768,6 @@ public class Inventory implements GReport {
         }
 
 //        System.out.println("getHeightInPoints = " + sheet.getRow(0).getHeightInPoints());
-
         headerRow.setHeightInPoints(20);
 
         // Create a CellStyle with double format (e.g., two decimal places)
