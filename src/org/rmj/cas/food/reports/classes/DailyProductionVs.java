@@ -278,6 +278,7 @@ public class DailyProductionVs implements GReport{
                                                     params, 
                                                     beanColDataSource1);
         } catch (JRException ex) {
+            ShowMessageFX.Error(ex.getMessage(), DailyProductionVs.class.getSimpleName(), "Please inform MIS Department.");
             Logger.getLogger(DailyProductionVs.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }

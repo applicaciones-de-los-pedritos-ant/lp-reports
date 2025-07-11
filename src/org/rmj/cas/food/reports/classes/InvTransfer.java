@@ -351,7 +351,9 @@ public class InvTransfer implements GReport {
                     params,
                     jrRS);
         } catch (JRException ex) {
+            ShowMessageFX.Error(ex.getMessage(), InvTransfer.class.getSimpleName(), "Please inform MIS Department.");
             Logger.getLogger(InvTransfer.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
 
         return true;
@@ -443,7 +445,9 @@ public class InvTransfer implements GReport {
                     params,
                     jrRS);
         } catch (JRException ex) {
+            ShowMessageFX.Error(ex.getMessage(), InvTransfer.class.getSimpleName(), "Please inform MIS Department.");
             Logger.getLogger(InvTransfer.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
 
         return true;

@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -275,6 +276,9 @@ public class PurchaseOrder implements GReport {
                     jrRS);
         } catch (JRException | SQLException ex) {
             Logger.getLogger(PurchaseOrder.class.getName()).log(Level.SEVERE, null, ex);
+            ShowMessageFX.Error(ex.getMessage(), PurchaseOrder.class.getSimpleName(), "Please inform MIS Department.");
+            ex.printStackTrace();
+            return false;
         }
 
         return true;
@@ -334,7 +338,13 @@ public class PurchaseOrder implements GReport {
                     params,
                     jrRS);
         } catch (JRException | SQLException ex) {
+            Logger.getLogger(PurchaseOrder.class.getName()).log(Level.SEVERE, null, ex);
+
+            Platform.runLater(() -> {
+                ShowMessageFX.Error(ex.getMessage(), PurchaseOrder.class.getSimpleName(), "Please inform MIS Department.");
+            });
             ex.printStackTrace();
+            return false;
         }
 
         return true;

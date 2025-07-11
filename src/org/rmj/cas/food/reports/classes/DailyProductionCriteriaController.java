@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
@@ -36,7 +37,7 @@ import org.rmj.appdriver.constants.UserRight;
  * @author User
  */
 public class DailyProductionCriteriaController implements Initializable {
-
+    
     @FXML
     private AnchorPane dataPane;
     @FXML
@@ -61,7 +62,9 @@ public class DailyProductionCriteriaController implements Initializable {
     private FontAwesomeIconView glyphExit;
     @FXML
     private CheckBox checkbox01;
-
+    @FXML
+    private Label lblTitleCriteria;
+    
     private GRider oApp;
     private boolean pbCancelled = true;
     private boolean pbSingleDate = false;
@@ -71,103 +74,110 @@ public class DailyProductionCriteriaController implements Initializable {
     private String psBranch = "";
     private String psInvTypCd = "";
     private String psGroupBy = "";
+    private String psTitle = "";
     private boolean pbExport = false;
-
+    
     public void setGRider(GRider foApp) {
         oApp = foApp;
     }
-
+    
     public boolean isCancelled() {
         return pbCancelled;
     }
-
+    
     public String getDateFrom() {
         return psDateFrom;
     }
-
+    
     public String getDateTo() {
         return psDateThru;
     }
-
+    
     public void singleDayOnly(boolean foValue) {
         pbSingleDate = foValue;
     }
-
+    
     public String GroupBy() {
         return psGroupBy;
     }
-
+    
     public String getBranch() {
         return psBranch;
     }
-
+    
     public String Presentation() {
         return psPresentation;
     }
-
+    
     public String getInvType() {
         return psInvTypCd;
     }
-
+    
     public boolean isExport() {
         return pbExport;
     }
-
+    
+    public void setCriteriaTitle(String fsTitle) {
+        psTitle = fsTitle;
+    }
+    
     ToggleGroup tgPresentation;
-
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         btnExit.setOnAction(this::cmdButton_Click);
         btnOk.setOnAction(this::cmdButton_Click);
         btnCancel.setOnAction(this::cmdButton_Click);
-
+        
         txtField01.setOnKeyPressed(this::txtField_KeyPressed);
         txtField02.setOnKeyPressed(this::txtField_KeyPressed);
         txtField03.setOnKeyPressed(this::txtField_KeyPressed);
-
+        
         txtField01.focusedProperty().addListener(txtField_Focus);
         txtField02.focusedProperty().addListener(txtField_Focus);
         txtField03.focusedProperty().addListener(txtField_Focus);
-
+        
         radioBtn01.setOnAction(this::radioButton_Click);
         radioBtn02.setOnAction(this::radioButton_Click);
-
+        
         txtField02.setDisable(pbSingleDate);
         if (oApp.getUserLevel() < UserRight.SUPERVISOR) {
             txtField03.setDisable(true);
         }
-
+        
         tgPresentation = new ToggleGroup();
-
+        
         tgPresentation.getToggles().addAll(radioBtn01, radioBtn02);
         loadRecord();
-
+        if (!psTitle.isEmpty()) {
+            lblTitleCriteria.setText(psTitle);
+        }
         pbLoaded = true;
     }
-
+    
     @FXML
     void checkbox01_Clicked(MouseEvent event) {
         boolean isChecked = checkbox01.isSelected();
         pbExport = isChecked;
     }
-
+    
     private void loadRecord() {
         txtField01.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField02.setText(CommonUtils.xsDateMedium((Date) java.sql.Date.valueOf(LocalDate.now())));
         txtField03.setText("");
-
-        if ( oApp.getUserLevel() < UserRight.SUPERVISOR) {
+        
+        if (oApp.getUserLevel() < UserRight.SUPERVISOR) {
             txtField03.setText(oApp.getBranchName());
-            txtField03.setDisable( oApp.getUserLevel() < UserRight.SUPERVISOR);
+            txtField03.setDisable(oApp.getUserLevel() < UserRight.SUPERVISOR);
         }
         radioBtn01.setSelected(true);
         psPresentation = "1";
     }
-
+    
     private Stage getStage() {
         return (Stage) btnOk.getScene().getWindow();
     }
-
+    
     private void radioButton_Click(ActionEvent event) {
         String lsRadio = ((RadioButton) event.getSource()).getId();
         switch (lsRadio) {
@@ -178,9 +188,9 @@ public class DailyProductionCriteriaController implements Initializable {
                 psPresentation = "2";
                 break;
         }
-
+        
     }
-
+    
     private void cmdButton_Click(ActionEvent event) {
         String lsButton = ((Button) event.getSource()).getId();
         switch (lsButton) {
@@ -199,7 +209,7 @@ public class DailyProductionCriteriaController implements Initializable {
                 } else {
                     psDateFrom = CommonUtils.xsDateShort(txtField01.getText());
                 }
-
+                
                 if (CommonUtils.isDate(txtField02.getText(), pxeDateFormat)) {
                     psDateThru = SQLUtil.dateFormat(SQLUtil.toDate(txtField02.getText(), SQLUtil.FORMAT_LONG_DATE), SQLUtil.FORMAT_SHORT_DATE);
                 } else {
@@ -220,7 +230,7 @@ public class DailyProductionCriteriaController implements Initializable {
                     return;
                 }
             }
-
+            
             pbCancelled = false;
             break;
             case "btnExit":
@@ -231,25 +241,25 @@ public class DailyProductionCriteriaController implements Initializable {
         }
         CommonUtils.closeStage(btnExit);
     }
-
+    
     private JSONObject searchBranch(String fsValue) {
         String lsSQL = "SELECT sBranchCd, sBranchNm"
                 + " FROM Branch"
                 + " WHERE (sBranchCd LIKE 'P%' OR sBranchCd LIKE 'F%')";
-
+        
         return showFXDialog.jsonSearch(oApp, lsSQL, fsValue, "ID»Branch", "sBranchCd»sBranchNm", "sBranchCd»sBranchNm", 1);
     }
-
+    
     private void txtField_KeyPressed(KeyEvent event) {
         TextField txtField = (TextField) event.getSource();
         int lnIndex = Integer.parseInt(txtField.getId().substring(8, 10));
         String lsValue = txtField.getText();
         JSONObject loJSON = null;
-
+        
         if (lnIndex == 3) {
             if (event.getCode() == KeyCode.F3) {
                 loJSON = searchBranch(lsValue);
-
+                
                 if (loJSON != null) {
                     psBranch = (String) loJSON.get("sBranchCd");
                     txtField03.setText((String) loJSON.get("sBranchNm"));
@@ -259,7 +269,7 @@ public class DailyProductionCriteriaController implements Initializable {
                 }
             }
         }
-
+        
         switch (event.getCode()) {
             case DOWN:
             case ENTER:
@@ -269,27 +279,27 @@ public class DailyProductionCriteriaController implements Initializable {
                 CommonUtils.SetPreviousFocus(txtField);
         }
     }
-
+    
     public final String pxeModuleName = "org.rmj.reportmenufx.views.DailyProduction";
     private static GRider poGRider;
     private final String pxeDateFormat = "MM-dd-yyyy";
     private static final String pxeDefaultDate = java.time.LocalDate.now().toString();
     private boolean pbLoaded = false;
     private int pnIndex = -1;
-
+    
     final ChangeListener<? super Boolean> txtField_Focus = (o, ov, nv) -> {
         if (!pbLoaded) {
             return;
         }
-
+        
         TextField txtField = (TextField) ((ReadOnlyBooleanPropertyBase) o).getBean();
         int lnIndex = Integer.parseInt(txtField.getId().substring(8, 10));
         String lsValue = txtField.getText();
-
+        
         if (lsValue == null) {
             return;
         }
-
+        
         if (!nv) {
             /*Lost Focus*/
             switch (lnIndex) {
@@ -302,7 +312,7 @@ public class DailyProductionCriteriaController implements Initializable {
                     } else {
                         txtField.setText(CommonUtils.xsDateMedium(CommonUtils.toDate(pxeDefaultDate)));
                     }
-
+                    
                     if (pbSingleDate) {
                         txtField02.setText(txtField01.getText());
                     }
@@ -329,5 +339,5 @@ public class DailyProductionCriteriaController implements Initializable {
             txtField.selectAll();
         }
     };
-
+    
 }
