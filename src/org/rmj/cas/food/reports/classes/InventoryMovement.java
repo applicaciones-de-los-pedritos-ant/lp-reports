@@ -597,8 +597,7 @@ public class InventoryMovement implements GReport {
         if (!lsBranchCd.isEmpty()) {
             lsSQL = lsSQL + " AND a.sBranchCd = " + SQLUtil.toSQL(lsBranchCd);
         }
-        lsSQL = lsSQL + " AND a.cRecdStat = '1' "
-                + "  GROUP BY sField01,sField02,a.sBranchCd, a.sStockIDx";
+        lsSQL = lsSQL + "  GROUP BY sField01,sField02,a.sBranchCd, a.sStockIDx";
         return lsSQL;
     }
 

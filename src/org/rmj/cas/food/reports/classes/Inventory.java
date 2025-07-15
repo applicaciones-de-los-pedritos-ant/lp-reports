@@ -11,10 +11,13 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -74,6 +77,8 @@ public class Inventory implements GReport {
 
     private double xOffset = 0;
     private double yOffset = 0;
+
+    static String excelName = "";
     static String filePath = "D:/GGC_Java_Systems/excel export/";
 
     public Inventory() {
@@ -387,6 +392,7 @@ public class Inventory implements GReport {
     private boolean printDetails() throws SQLException {
         String lsCondition = "";
         String lsDate = "";
+        String lsExcelDate = "";
         String lsDateFrom = "";
         String lsDateThru = "";
 
@@ -394,6 +400,7 @@ public class Inventory implements GReport {
                 && !System.getProperty("store.report.criteria.datethru").equals("")) {
             lsDateFrom = System.getProperty("store.report.criteria.datefrom");
             lsDateThru = System.getProperty("store.report.criteria.datethru");
+            lsExcelDate = ExcelDate(lsDateFrom, lsDateThru);
             lsDate = SQLUtil.toSQL(System.getProperty("store.report.criteria.datefrom")) + " AND "
                     + SQLUtil.toSQL(System.getProperty("store.report.criteria.datethru"));
 
@@ -437,6 +444,7 @@ public class Inventory implements GReport {
                     rs.getObject("sField05").toString(),
                     rs.getObject("sField06").toString(),
                     rs.getObject("sField07").toString(),
+                    rs.getObject("sField08").toString(),
                     rs.getDouble("lField01"),
                     rs.getDouble("lField02"),
                     rs.getDouble("lField03"),
@@ -459,10 +467,11 @@ public class Inventory implements GReport {
 //        //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         JRBeanCollectionDataSource jrRS = new JRBeanCollectionDataSource(R1data);
+        excelName = "Inventory - " + lsExcelDate + ".xlsx";
 
         if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-            String[] headers = {"Branch", "Inventory Type", "Barcode", "Desciption", "Brand", "Measure", "QOH", "Beg. Inv", "Qty-In", "Qty-Out", "End Inv"};
-            exportToExcel(R1data, "Inventory", headers);
+            String[] headers = {"Branch", "Inventory Type", "Barcode", "Desciption", "Brand", "Measure", "QOH", "Beg. Inv", "Qty-In", "Qty-Out", "End Inv","Status"};
+            exportToExcel(R1data, headers);
         }
         //Create the parameter
         Map<String, Object> params = new HashMap<>();
@@ -495,9 +504,9 @@ public class Inventory implements GReport {
 //                    params,
 //                    jrRS);
         } catch (JRException ex) {
-            
+
             Platform.runLater(() -> {
-            ShowMessageFX.Error(ex.getMessage(), Inventory.class.getSimpleName(), "Please inform MIS Department.");
+                ShowMessageFX.Error(ex.getMessage(), Inventory.class.getSimpleName(), "Please inform MIS Department.");
             });
             Logger.getLogger(Inventory.class.getName()).log(Level.SEVERE, null, ex);
             return false;
@@ -587,6 +596,11 @@ public class Inventory implements GReport {
                 + ", 0 `lField05`"
                 + ", g.sBranchNm `sField06`"
                 + ", g.sBranchCd `sField07`"
+                + ", CASE "
+                + " WHEN a.cRecdStat = '1' AND b.cRecdStat = '1' THEN 'ACTIVE' "
+                + " WHEN a.cRecdStat = '0' OR b.cRecdStat = '0' THEN 'INACTIVE' "
+                + " ELSE 'UNKNOWN' "
+                + " END `sField08`"
                 + " FROM Inv_Master a"
                 + " LEFT JOIN Branch g ON a.sBranchCd = g.sBranchCd"
                 + " LEFT JOIN Inv_Ledger e ON a.sStockIDx = e.sStockIDx AND a.sBranchCd = e.sBranchCd"
@@ -595,7 +609,6 @@ public class Inventory implements GReport {
                 + " LEFT JOIN Brand d ON b.sBrandCde = d.sBrandCde"
                 + " LEFT JOIN Measure f ON b.sMeasurID = f.sMeasurID"
                 + " WHERE a.sStockIDx = b.sStockIDx"
-                + " AND a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
                 + " GROUP BY  sField06,sField02,a.sBranchCd, b.sStockIDx ";
 
         if (!System.getProperty("store.report.criteria.type").isEmpty()) {
@@ -754,7 +767,7 @@ public class Inventory implements GReport {
 
     }
 
-    public static void exportToExcel(ObservableList<InventoryModel> data, String fileName, String[] headers) {
+    public static void exportToExcel(ObservableList<InventoryModel> data, String[] headers) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Inventory Data");
 
@@ -789,6 +802,7 @@ public class Inventory implements GReport {
             row.createCell(8).setCellValue(item.getlField03());
             row.createCell(9).setCellValue(item.getlField04());
             row.createCell(10).setCellValue(item.getlField05());
+            row.createCell(11).setCellValue(item.getsField08());
 
             row.getCell(6).setCellStyle(doubleStyle);
             row.getCell(7).setCellStyle(doubleStyle);
@@ -805,10 +819,33 @@ public class Inventory implements GReport {
 //            System.out.println("sheet width = " + sheet.getColumnWidth(i));
         }
 
-        // Write to Excel file
-        try (FileOutputStream fileOut = new FileOutputStream(filePath + fileName + ".xlsx")) {
+        // Ensure the directory exists
+        File directory = new File(filePath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // Generate a unique file name if the file already exists
+        String fileFullPath = filePath + excelName;
+        File file = new File(fileFullPath);
+        int count = 1;
+
+        while (file.exists()) {
+            String baseName = excelName.contains(".")
+                    ? excelName.substring(0, excelName.lastIndexOf("."))
+                    : excelName;
+            String extension = excelName.contains(".")
+                    ? excelName.substring(excelName.lastIndexOf("."))
+                    : "";
+            fileFullPath = filePath + baseName + "-" + count + extension;
+            file = new File(fileFullPath);
+            count++;
+        }
+
+        // Write to the Excel file
+        try (FileOutputStream fileOut = new FileOutputStream(fileFullPath)) {
             workbook.write(fileOut);
-            System.out.println("Exported to Excel successfully.");
+            System.out.println("Exported to Excel successfully: " + fileFullPath);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -886,6 +923,29 @@ public class Inventory implements GReport {
             stage.showAndWait();
         } catch (IOException ex) {
             Logger.getLogger(Purchases.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    private String ExcelDate(String lsDateFrom, String lsDateThru) {
+
+        try {
+            // Parse the date string to a Date object
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date dateFrom, dateThru;
+            dateFrom = inputFormat.parse(lsDateFrom);
+            dateThru = inputFormat.parse(lsDateThru);
+
+            // Define the desired output format
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM d, yyyy");
+
+            // Convert the Date object to the desired string format
+            String formattedDateFrom = outputFormat.format(dateFrom);
+            String formattedDateThru = outputFormat.format(dateThru);
+            return formattedDateFrom + " to " + formattedDateThru;
+        } catch (ParseException ex) {
+            Logger.getLogger(DailyProduction.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
         }
 
     }

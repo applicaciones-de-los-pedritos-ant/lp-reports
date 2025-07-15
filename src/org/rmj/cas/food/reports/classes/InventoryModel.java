@@ -38,7 +38,7 @@ public class InventoryModel {
     }
 
     InventoryModel(String sindex00, String sindex01, String sindex02, String sindex03, String sindex04, String sindex05,
-            String sindex06, String sindex07, Double dindex07, Double dindex08, Double dindex09, Double dindex10, Double dindex11
+            String sindex06, String sindex07, String sindex08, Double dindex07, Double dindex08, Double dindex09, Double dindex10, Double dindex11
     ) {
         this.sField00 = new SimpleStringProperty(sindex00);
         this.sField01 = new SimpleStringProperty(sindex01);
@@ -48,6 +48,7 @@ public class InventoryModel {
         this.sField05 = new SimpleStringProperty(sindex05);
         this.sField06 = new SimpleStringProperty(sindex06);
         this.sField07 = new SimpleStringProperty(sindex07);
+        this.sField08 = new SimpleStringProperty(sindex08);
         this.lField01 = new SimpleDoubleProperty(dindex07);
         this.lField02 = new SimpleDoubleProperty(dindex08);
         this.lField03 = new SimpleDoubleProperty(dindex09);
