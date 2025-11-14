@@ -334,7 +334,7 @@ public class Purchases implements GReport {
 
         System.out.println(lsSQL);
         ResultSet rs = _instance.executeQuery(lsSQL + " ORDER BY sField02 ASC");
-        while (!rs.next()) {
+        if (MiscUtil.RecordCount(rs) <= 0) {
             _message = "No record found...";
             return false;
         }
@@ -343,6 +343,8 @@ public class Purchases implements GReport {
         rs.beforeFirst();
         while (rs.next()) {
             double nTotal = Double.parseDouble(String.valueOf(rs.getObject("lField01"))) * Double.parseDouble(String.valueOf(rs.getObject("nField01")));
+            
+//                    System.out.println( rs.getObject("sField08").toString());
             R1data.add(new PurchasesModel(
                     rs.getObject("sField01").toString(),
                     rs.getObject("sField02").toString(),
@@ -351,6 +353,7 @@ public class Purchases implements GReport {
                     rs.getObject("sField05").toString(),
                     rs.getObject("sField06").toString(),
                     rs.getObject("sField07").toString(),
+                    rs.getObject("sField08").toString(),
                     rs.getObject("nField01").toString(),
                     rs.getObject("lField01").toString(),
                     String.valueOf(nTotal)
@@ -362,7 +365,7 @@ public class Purchases implements GReport {
 
         excelName = "Purchases Detail - " + lsExcelDate + ".xlsx";
         if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-            String[] headers = {"Refer #", "Date", "Supplier", "Barcode", "Description", "Brand", "Measure", "Qty", "Cost", "Total"};
+            String[] headers = {"Transaction No.", "Refer #", "Date", "Supplier", "Barcode", "Description", "Brand", "Measure", "Qty", "Cost", "Total"};
             exportToExcel(R1data, headers);
         }
 
@@ -433,7 +436,10 @@ public class Purchases implements GReport {
 
         System.out.println(lsSQL);
         ResultSet rs = _instance.executeQuery(lsSQL + " ORDER BY sField02 ASC");
-
+        if (MiscUtil.RecordCount(rs) <= 0) {
+            _message = "No record found...";
+            return false;
+        }
         //Convert the data-source to JasperReport data-source
 //        JRResultSetDataSource jrRS = new JRResultSetDataSource(rs);
         ObservableList<PurchasesModel> R1data = FXCollections.observableArrayList();
@@ -447,6 +453,7 @@ public class Purchases implements GReport {
                     rs.getObject("sField04").toString(),
                     rs.getObject("sField05").toString(),
                     rs.getObject("sField06").toString(),
+                    rs.getObject("sField07").toString(),
                     rs.getObject("lField01").toString()
             ));
         }
@@ -456,7 +463,7 @@ public class Purchases implements GReport {
 
         excelName = "Purchases Summary - " + lsExcelDate + ".xlsx";
         if (System.getProperty("store.report.criteria.isexport").equals("true")) {
-            String[] headers = {"Refer #", "Date", "Supplier", "Destination", "Term", "Total", "Status"};
+            String[] headers = {"Transaction No.", "Refer #", "Date", "Supplier", "Destination", "Term", "Total", "Status"};
             exportToExcel(R1data, headers);
         }
         //Create the parameter
@@ -523,14 +530,15 @@ public class Purchases implements GReport {
             return "SELECT"
                     + "  a.sReferNox `sField01`"
                     + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`"
-                    + ", g.sClientNm `sField03`"
-                    + ", c.sBarCodex `sField04`"
-                    + ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))) `sField05`"
+                    + ", IFNULL(g.sClientNm,'') `sField03`"
+                    + ", IFNULL(c.sBarCodex,'') `sField04`"
+                    + ", IFNULL(CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))),'') `sField05`"
                     + ", IFNULL(e.`sDescript`, '') `sField07`"
                     + ", IFNULL(f.sMeasurNm, '') `sField06`"
                     + ", b.nQuantity `nField01`"
                     + ", b.nUnitPrce `lField01`"
                     + ", 0 `lField02`"
+                    + ", a.sTransNox `sField08`"
                     + " FROM PO_Master a"
                     + " LEFT JOIN Client_Master g"
                     + " ON a.sSupplier = g.sClientID"
@@ -552,14 +560,15 @@ public class Purchases implements GReport {
             return "SELECT"
                     + "  a.sReferNox `sField01`"
                     + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`"
-                    + ", g.sClientNm `sField03`"
-                    + ", c.sBarCodex `sField04`"
-                    + ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))) `sField05`"
+                    + ", IFNULL(g.sClientNm,'') `sField03`"
+                    + ", IFNULL(c.sBarCodex,'') `sField04`"
+                    + ", IFNULL(CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))),'') `sField05`"
                     + ", IFNULL(f.sMeasurNm, '') `sField06`"
                     + ", IFNULL(e.sDescript, '') `sField07`"
                     + ", b.nQuantity `nField01`"
                     + ", 0.00 `lField01`"
                     + ", 0 `lField02`"
+                    + ", a.sTransNox `sField08`"
                     + " FROM PO_Master a"
                     + " LEFT JOIN Client_Master g"
                     + " ON a.sSupplier = g.sClientID"
@@ -596,6 +605,7 @@ public class Purchases implements GReport {
                 + " WHEN '3' THEN 'CANCELLED'"
                 + " WHEN '4' THEN 'VOID'"
                 + " END `sField06`"
+                + ", a.sTransNox `sField07`"
                 + " FROM PO_Master a"
                 + " LEFT JOIN Branch c  ON a.sBranchCd = c.sBranchCd"
                 + " LEFT JOIN Term d ON a.sTermCode = d.sTermCode"
@@ -636,26 +646,32 @@ public class Purchases implements GReport {
         int rowIndex = 1;
         for (PurchasesModel item : data) {
             Row row = sheet.createRow(rowIndex++);
-            row.createCell(0).setCellValue(item.getsField01());
-            row.createCell(1).setCellValue(item.getsField02());
-            row.createCell(2).setCellValue(item.getsField03());
-            row.createCell(3).setCellValue(item.getsField04());
-            row.createCell(4).setCellValue(item.getsField05());
-            if (System.getProperty("store.report.criteria.presentation").equals("1")) {
-                row.createCell(5).setCellValue(item.getsField07());
-                row.createCell(6).setCellValue(item.getsField06());
-                row.createCell(7).setCellValue(item.getnField01());
-                row.createCell(8).setCellValue(item.getlField01());
-                row.createCell(9).setCellValue(item.getlField02());
+            row.createCell(1).setCellValue(item.getsField01());
+            row.createCell(2).setCellValue(item.getsField02());
+            row.createCell(3).setCellValue(item.getsField03());
+            row.createCell(4).setCellValue(item.getsField04());
+            row.createCell(5).setCellValue(item.getsField05());
 
+            //detailed
+            if (System.getProperty("store.report.criteria.presentation").equals("1")) {
+                row.createCell(6).setCellValue(item.getsField07());
+                row.createCell(7).setCellValue(item.getsField06());
+                row.createCell(8).setCellValue(item.getnField01());
+                row.createCell(9).setCellValue(item.getlField01());
+                row.createCell(10).setCellValue(item.getlField02());
+                //transnox
+                row.createCell(0).setCellValue(item.getsField08());
                 // Apply the double format style to the appropriate columns (7, 8, 9)
-                row.getCell(7).setCellStyle(doubleStyle);
                 row.getCell(8).setCellStyle(doubleStyle);
                 row.getCell(9).setCellStyle(doubleStyle);
+                row.getCell(10).setCellStyle(doubleStyle);
             } else {
 
-                row.createCell(5).setCellValue(item.getlField01());
-                row.createCell(6).setCellValue(item.getsField06());
+                //transnox
+                row.createCell(0).setCellValue(item.getsField07());
+
+                row.createCell(6).setCellValue(item.getlField01());
+                row.createCell(7).setCellValue(item.getsField06());
 
                 // Apply the double format style to the appropriate columns (6)
                 row.getCell(5).setCellStyle(doubleStyle);
