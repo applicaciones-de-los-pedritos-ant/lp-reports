@@ -12,7 +12,6 @@
             <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InvWaste.java</file>
             <file>file:/D:/Guanzon/GMC%20SEG%20Folder%20-%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/DailyProduction.java</file>
         </group>
-        <group/>
         <group name="integsys-lp">
             <file>file:/C:/Users/Maynard/Documents/GitHub/lp-reports/src/org/rmj/cas/food/reports/classes/Inventory.java</file>
         </group>
@@ -26,6 +25,29 @@
             <file>file:/D:/GMC_SEG_Folder%20-%20Maven/applicaciones-de-los-pedritos-ant/lp-reports/src/org/rmj/cas/food/reports/classes/Purchases.java</file>
             <file>file:/D:/GMC_SEG_Folder%20-%20Maven/applicaciones-de-los-pedritos-ant/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryMovement.java</file>
             <file>file:/D:/GMC_SEG_Folder%20-%20Maven/applicaciones-de-los-pedritos-ant/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryTransferCriteriaController.java</file>
+        </group>
+        <group name="Los Pedritos - IntegSys - Java">
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/Purchases.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryLedger.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/Inventory.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseReceiving.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseReceivingCriteriaController.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryMovement.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InvTransfer.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryMovementCriteriaController.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseOrder.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/Parameters.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InvTransferModel.java</file>
+        </group>
+        <group name="Los Pedritos IntegSys"/>
+        <group>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/Inventory.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryMovementCriteriaController.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/InventoryLedgerCriteriaController.java</file>
+        </group>
+        <group name="Los Pedritos (Java)">
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseReceiving.java</file>
+            <file>file:/D:/000MNVProject/Los%20Pedritos%20IntegSys%20Java/lp-reports/src/org/rmj/cas/food/reports/classes/PurchaseOrder.java</file>
         </group>
     </open-files>
 </project-private>
