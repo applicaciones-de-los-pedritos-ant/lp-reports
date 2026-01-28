@@ -56,6 +56,24 @@ public class InvTransferModel {
         this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index06));
         this.lField02 = new SimpleDoubleProperty(Double.parseDouble(index07));
     }
+    
+    InvTransferModel(String index01, String index02, String index03, String index04, String index05,
+            String index06, String index07, String index08, String index09, String index10, 
+            String index11, String index12){
+        this.sField01 = new SimpleStringProperty(index01);
+        this.sField02 = new SimpleStringProperty(index02);
+        this.sField03 = new SimpleStringProperty(index03);
+        this.sField04 = new SimpleStringProperty(index04);
+        this.sField05 = new SimpleStringProperty(index05);
+        this.sField06 = new SimpleStringProperty(index06);
+        this.sField07 = new SimpleStringProperty(index07);
+        this.sField08 = new SimpleStringProperty(index08);
+        this.sField09 = new SimpleStringProperty(index09);
+        this.sField10 = new SimpleStringProperty(index10);
+        this.sField11 = new SimpleStringProperty(index11);
+        this.lField01 = new SimpleDoubleProperty(Double.parseDouble(index12));
+    }
+    
     public String getsField01() {
         return sField01.get();
     }
