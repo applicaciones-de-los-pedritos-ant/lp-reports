@@ -299,7 +299,7 @@ public class InvTransfer implements GReport {
             lsCondition = "0=1";
         }
 
-        System.out.println(MiscUtil.addCondition(getReportSQL(), lsCondition));
+        System.out.println(MiscUtil.addCondition(getReportSQLSummary(), lsCondition));
         lsSQL = MiscUtil.addCondition(getReportSQLSummary(), lsCondition);
         ResultSet rs = _instance.executeQuery(lsSQL);
         System.out.println(lsSQL);
@@ -479,15 +479,15 @@ public class InvTransfer implements GReport {
         String lsSQL = "SELECT"
                 + "  IFNULL(i.sBranchNm,'j.sBranchNm') `sField10`"
                 + ", IFNULL(g.sBranchNm,'') `sField01`"
-                + ", a.sTransNox `sField02`"
+                + ", IFNULL(a.sTransNox,'') `sField02`"
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`"
-                + ", h.sDescript `sField04`"
-                + ", c.sBarCodex `sField05`"
+                + ", IFNULL(h.sDescript,'') `sField04`"
+                + ", IFNULL(c.sBarCodex,'') `sField05`"
                 + ", IFNULL(c.sDescript, '') `sField06`"
                 + ", IFNULL(f.sMeasurNm, '') `sField07`"
                 + ", IFNULL(e.sDescript, '') `sField08`"
-                + ", b.nQuantity `lField01`"
-                + ", c.nUnitPrce `lField02`"
+                + ", IFNULL(b.nQuantity,0.0) `lField01`"
+                + ", IFNULL(c.nUnitPrce,0.0) `lField02`"
                 + ", CASE a.cTranStat"
                 + " WHEN '0' THEN 'OPEN'"
                 + " WHEN '1' THEN 'CONFIRMED'"
@@ -536,9 +536,9 @@ public class InvTransfer implements GReport {
                 + "  IFNULL(e.sBranchNm,'') `sField01`"
                 + ", IFNULL(d.sBranchNm,'') `sField02`"
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField03`"
-                + ", a.sTransNox `sField04`"
-                + ", SUM(b.nQuantity)  `lField01`"
-                + ", SUM(b.nQuantity * c.nUnitPrce) `lField02`"
+                + ", IFNULL(a.sTransNox,'') `sField04`"
+                + ", SUM(IFNULL(b.nQuantity,0.0))  `lField01`"
+                + ", SUM(IFNULL(b.nQuantity,0.0) * IFNULL(c.nUnitPrce,0.0)) `lField02`"
                 + ", CASE a.cTranStat"
                 + " WHEN '0' THEN 'OPEN'"
                 + " WHEN '1' THEN 'CONFIRMED'"
