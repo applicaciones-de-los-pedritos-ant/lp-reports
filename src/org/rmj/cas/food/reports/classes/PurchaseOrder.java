@@ -367,7 +367,7 @@ public class PurchaseOrder implements GReport {
                 + "  a.sReferNox `sField01`"
                 + ", DATE_FORMAT(a.dTransact, '%Y-%m-%d') `sField02`"
                 + ", g.sClientNm `sField03`"
-                + ", c.sBarCodex `sField04`"
+                + ", IFNULL(c.sBarCodex,'') `sField04`"
                 + ", CONCAT(c.sDescript, IF(IFNULL(d.sDescript, '') = '', '', CONCAT(' / ', d.sDescript))) `sField05`"
                 + ", IFNULL(f.sMeasurNm, '') `sField06`"
                 + ", IFNULL(e.sDescript, '') `sField07`"

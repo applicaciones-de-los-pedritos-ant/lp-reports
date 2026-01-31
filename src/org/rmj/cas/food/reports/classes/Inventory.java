@@ -585,7 +585,7 @@ public class Inventory implements GReport {
         String lsSQL = "SELECT"
                 + "  IFNULL(b.sStockIDx, '') `sField00`"
                 + ", IFNULL(c.sDescript, '') `sField01`"
-                + ", b.sBarCodex `sField02`"
+                + ", IFNULL(b.sBarCodex, '') `sField02`"
                 + ", IFNULL(b.`sDescript`, '') `sField03`"
                 + ", IFNULL(d.`sDescript`, '') `sField05`"
                 + ", IFNULL(f.sMeasurNm, '') `sField04`"

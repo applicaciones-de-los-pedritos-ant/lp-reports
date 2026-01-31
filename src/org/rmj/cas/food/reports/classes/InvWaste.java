@@ -476,7 +476,7 @@ public class InvWaste implements GReport {
     private String getReportSQLSummary() {
         String lsSQL = "SELECT"
                 + " g.sBranchNm sField01"
-                + " , c.sBarCodex sField02"
+                + " , IFNULL(c.sBarCodex, '') sField02"
                 + " , IFNULL(c.sDescript, '') sField03"
                 + " , IFNULL(e.sDescript, '') sField04"
                 + " , IFNULL(d.sMeasurNm, '') sField05"

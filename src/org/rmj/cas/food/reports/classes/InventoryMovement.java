@@ -571,7 +571,7 @@ public class InventoryMovement implements GReport {
     private String getReportSQL(String lsDate, String lsBranchCd) {
         String lsSQL = "SELECT a.sStockIDx `sField00` "
                 + ",	IFNULL(h.sBranchNm,'') `sField01` "
-                + ",	c.sBarCodex `sField02` "
+                + ",	IFNULL(c.sBarCodex, '') `sField02` "
                 + ",	IFNULL(c.sDescript,'') `sField03` "
                 + ",	IFNULL(d.sDescript,'') `sField04` "
                 + ",	IFNULL(e.sDescript, '') `sField05` "
@@ -604,7 +604,7 @@ public class InventoryMovement implements GReport {
     private String getReportSQLMovement() {
         String lsSQL = "SELECT a.sStockIDx `sField00` "
                 + ",	IFNULL(h.sBranchNm,'') `sField01` "
-                + ",  c.sBarCodex `sField02` "
+                + ",  IFNULL(c.sBarCodex,'') `sField02` "
                 + ",  IFNULL(c.sDescript,'') `sField03` "
                 + ",  IFNULL(d.sDescript,'') `sField04` "
                 + ",  IFNULL(e.sDescript, '') `sField05` "
