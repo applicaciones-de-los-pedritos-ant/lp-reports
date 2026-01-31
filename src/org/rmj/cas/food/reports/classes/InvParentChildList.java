@@ -263,7 +263,18 @@ public class InvParentChildList implements GReport {
         params.put("sAddressx", _instance.getAddress() + " " + _instance.getTownName() + ", " + _instance.getProvince());
         params.put("sReportNm", System.getProperty("store.report.header"));
 //        params.put("sReportDt", !lsDate.equals("") ? lsDate.replace("AND", "to").replace("'", "") : "");
-        params.put("sPrintdBy", _instance.getUserID());
+       lsSQL = "SELECT sClientNm FROM Client_Master"
+                + " WHERE sClientID IN ("
+                + "SELECT sEmployNo FROM xxxSysUser WHERE sUserIDxx = " + SQLUtil.toSQL(_instance.getUserID()) + ")";
+
+        ResultSet loRS = _instance.executeQuery(lsSQL);
+
+        if (loRS.next()) {
+            params.put("sPrintdBy", loRS.getString("sClientNm"));
+        } else {
+            params.put("sPrintdBy", "");
+        }
+
 
         try {
             _jrprint = JasperFillManager.fillReport(_instance.getReportPath()
