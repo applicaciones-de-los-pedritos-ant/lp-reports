@@ -120,7 +120,7 @@ public class PurchasesOverrideApproval implements GReport {
     @Override
     public boolean getParam() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PurchasesOverrideCriteria.fxml"));
-        fxmlLoader.setLocation(getClass().getResource("PurchasesCriteria.fxml"));
+        fxmlLoader.setLocation(getClass().getResource("PurchasesOverrideCriteria.fxml"));
 
         PurchasesOverrideCriteriaController instance = new PurchasesOverrideCriteriaController();
         instance.setGRider(_instance);
