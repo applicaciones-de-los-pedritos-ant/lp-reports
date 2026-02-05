@@ -119,10 +119,10 @@ public class PurchasesOverrideApproval implements GReport {
 
     @Override
     public boolean getParam() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PurchasesCriteria.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PurchasesOverrideCriteria.fxml"));
         fxmlLoader.setLocation(getClass().getResource("PurchasesCriteria.fxml"));
 
-        PurchasesCriteriaController instance = new PurchasesCriteriaController();
+        PurchasesOverrideCriteriaController instance = new PurchasesOverrideCriteriaController();
         instance.setGRider(_instance);
         instance.singleDayOnly(false);
         instance.isSummarizedOnly(true);
@@ -169,7 +169,7 @@ public class PurchasesOverrideApproval implements GReport {
             System.setProperty("store.report.criteria.supplier", instance.getSupplier());
             System.setProperty("store.report.criteria.isexport", String.valueOf(instance.isExport()));
 
-            System.setProperty("store.report.criteria.branch", "");
+            System.setProperty("store.report.criteria.branch", instance.getBranch());
             System.setProperty("store.report.criteria.group", "");
             return true;
         }
@@ -465,13 +465,14 @@ public class PurchasesOverrideApproval implements GReport {
                 + " ON c.sMeasurID = f.sMeasurID"
                 + " WHERE a.sTransNox = b.sTransNox"
                 + " AND a.`sSupplier` = g.`sClientID`"
-                + " AND LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode())
                 + " AND a.cTranStat <> '3'"
                 + " GROUP BY sField05, sField03";
 
-//        if (_instance.getUserLevel() <= UserRight.ENGINEER){
-//            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
-//        }
+        if (!System.getProperty("store.report.criteria.branch").isEmpty()) {
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+        }
         return lsSQL;
     }
 
