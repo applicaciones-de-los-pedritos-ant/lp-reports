@@ -470,9 +470,10 @@ public class PurchasesOverrideApproval implements GReport {
 
         if (!System.getProperty("store.report.criteria.branch").isEmpty()) {
             lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
-        } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
         }
+//        else {
+//            lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox, 4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+//        }
         return lsSQL;
     }
 
