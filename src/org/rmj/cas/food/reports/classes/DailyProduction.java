@@ -507,7 +507,7 @@ public class DailyProduction implements GReport {
             lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox,4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
         } else {
             if (_instance.getUserLevel() < UserRight.SUPERVISOR) {
-                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(sTransNox,4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox,4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
             }
         }
 
@@ -548,7 +548,7 @@ public class DailyProduction implements GReport {
             lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox,4) = " + SQLUtil.toSQL(System.getProperty("store.report.criteria.branch")));
         } else {
             if (_instance.getUserLevel() < UserRight.SUPERVISOR) {
-                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(sTransNox,4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
+                lsSQL = MiscUtil.addCondition(lsSQL, "LEFT(a.sTransNox,4) = " + SQLUtil.toSQL(_instance.getBranchCode()));
             }
         }
 
