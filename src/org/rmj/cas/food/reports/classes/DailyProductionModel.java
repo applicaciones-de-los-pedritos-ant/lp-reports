@@ -20,6 +20,22 @@ public class DailyProductionModel {
     private SimpleObjectProperty nField04;
     private SimpleObjectProperty nField05;
 
+    //detailed production rawmaterial
+    DailyProductionModel(String sField01, String sField02, String sField03, String sField04, String sField05,
+            String sField06, String sField07, String sField08,
+            Double nField01,Double nField02) {
+        this.sField01 = new SimpleObjectProperty(sField01);
+        this.sField02 = new SimpleObjectProperty(sField02);
+        this.sField03 = new SimpleObjectProperty(sField03);
+        this.sField04 = new SimpleObjectProperty(sField04);
+        this.sField05 = new SimpleObjectProperty(sField05);
+        this.sField06 = new SimpleObjectProperty(sField06);
+        this.sField07 = new SimpleObjectProperty(sField07);
+        this.sField08 = new SimpleObjectProperty(sField08);
+        this.nField01 = new SimpleObjectProperty(nField01);
+        this.nField02 = new SimpleObjectProperty(nField02);
+    }
+
     //summarized production
     DailyProductionModel(String sField01, String sField02, String sField03, String sField04, String sField05,
             Double nField01, Double nField02, Double nField03, Double nField04) {
@@ -36,7 +52,7 @@ public class DailyProductionModel {
 
     //detailed production
     DailyProductionModel(String sField01, String sField02, String sField03, String sField04, String sField05,
-            String sField06,String sField07,String sField08,
+            String sField06, String sField07, String sField08,
             Double nField01, Double nField02, Double nField03, Double nField04) {
         this.sField01 = new SimpleObjectProperty(sField01);
         this.sField02 = new SimpleObjectProperty(sField02);
